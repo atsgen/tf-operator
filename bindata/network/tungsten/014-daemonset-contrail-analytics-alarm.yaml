@@ -1,0 +1,136 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-analytics-alarm
+  namespace: kube-system
+  labels:
+    app: contrail-analytics-alarm
+spec:
+  selector:
+    matchLabels:
+      app: contrail-analytics-alarm
+  template:
+    metadata:
+      labels:
+        app: contrail-analytics-alarm
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/analytics_alarm"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      initContainers:
+      - name: contrail-node-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        env:
+        - name: NODE_TYPE
+          value: "analytics-alarm"
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analyticsdb-config
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+        - mountPath: /host/var/lib
+          name: host-var-lib
+      containers:
+      - name: kafka
+        image: "{{ CONTRAIL_REGISTRY }}/contrail-external-kafka:{{ CONTRAIL_CONTAINER_TAG }}"
+        imagePullPolicy: "IfNotPresent"
+        securityContext:
+          privileged: true
+        env:
+        - name: NODE_TYPE
+          value: analytics-alarm
+        - name: KAFKA_NODES
+          value: {{ KAFKA_NODES}}
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+      - name: contrail-analytics-alarm-gen
+        image: "{{CONTRAIL_REGISTRY}}/contrail-analytics-alarm-gen:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-alarm-logs
+        env:
+        - name: NODE_TYPE
+          value: analytics-alarm
+      - name: contrail-analytics-alarm-nodemgr
+        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analyticsdb-config
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: analytics-alarm
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-alarm-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      - name: contrail-analytics-alarm-provisioner
+        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: defaults-env
+        - configMapRef:
+            name: contrail-analyticsdb-config
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: analytics-alarm
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-alarm-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: analytics-alarm-logs
+        hostPath:
+          path: /var/log/contrail/analytics-alarm
+      - name: host-var-lib
+        hostPath:
+          path: /var/lib
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin

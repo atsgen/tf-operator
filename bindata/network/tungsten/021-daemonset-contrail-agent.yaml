@@ -1,0 +1,203 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-agent
+  namespace: kube-system
+  labels:
+    app: contrail-agent
+spec:
+  selector:
+    matchLabels:
+      app: contrail-agent
+  template:
+    metadata:
+      labels:
+        app: contrail-agent
+    spec:
+      #Disable affinity for single node setup
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/agent"
+                operator: Exists
+      #Enable tolerations for single node setup
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoSchedule
+      automountServiceAccountToken: false
+      hostNetwork: true
+      initContainers:
+      - name: contrail-node-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        env:
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+      - name: contrail-vrouter-kernel-init
+        image: "{{CONTRAIL_REGISTRY}}/{{VROUTER_KERNEL_INIT_IMAGE}}:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /usr/src
+          name: usr-src
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /etc/sysconfig/network-scripts
+          name: network-scripts
+        - mountPath: /host/bin
+          name: host-bin
+      - name: contrail-kubernetes-cni-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/lib/contrail
+          name: var-lib-contrail
+        - mountPath: /host/etc_cni
+          name: etc-cni
+        - mountPath: /host/opt_cni_bin
+          name: opt-cni-bin
+        - mountPath: /host/log_cni
+          name: var-log-contrail-cni
+        - mountPath: /var/log/contrail
+          name: agent-logs
+      containers:
+      - name: contrail-vrouter-agent
+        image: "{{CONTRAIL_REGISTRY}}/contrail-vrouter-agent:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
+        # is not present in the container. The mounting it into container
+        # doesnt help because of permissions are not enough syscalls,
+        # e.g. https://github.com/Juniper/contrail-controller/blob/master/src/vnsw/agent/contrail/linux/pkt0_interface.cc: 48.
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        lifecycle:
+          preStop:
+            exec:
+              command: ["/clean-up.sh"]
+        volumeMounts:
+        - mountPath: /dev
+          name: dev
+        - mountPath: /etc/sysconfig/network-scripts
+          name: network-scripts
+        - mountPath: /host/bin
+          name: host-bin
+        - mountPath: /var/log/contrail
+          name: agent-logs
+        - mountPath: /usr/src
+          name: usr-src
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /var/lib/contrail
+          name: var-lib-contrail
+        - mountPath: /var/crashes
+          name: var-crashes
+        - mountPath: /tmp/serviceaccount
+          name: pod-secret
+      - name: contrail-agent-nodemgr
+        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: vrouter
+# todo: there is type Socket in new kubernetes, it is possible to use full
+# path:
+# hostPath:
+#   path: /var/run/docker.sock and
+#   type: Socket
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: agent-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      - name: contrail-agent-provisioner
+        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: defaults-env
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: vrouter
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: agent-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: dev
+        hostPath:
+          path: /dev
+      - name: network-scripts
+        hostPath:
+          path: /etc/sysconfig/network-scripts
+      - name: host-bin
+        hostPath:
+          path: /bin
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: pod-secret
+        secret:
+          secretName: contrail-kube-manager-token
+      - name: usr-src
+        hostPath:
+          path: /usr/src
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: var-lib-contrail
+        hostPath:
+          path: /var/lib/contrail
+      - name: var-crashes
+        hostPath:
+          path: /var/contrail/crashes
+      - name: etc-cni
+        hostPath:
+          path: /etc/cni
+      - name: opt-cni-bin
+        hostPath:
+          path: /opt/cni/bin
+      - name: var-log-contrail-cni
+        hostPath:
+          path: /var/log/contrail/cni
+      - name: agent-logs
+        hostPath:
+          path: /var/log/contrail/agent
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin
+
+# Meta information section

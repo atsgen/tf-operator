@@ -1,0 +1,149 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-controller-config
+  namespace: kube-system
+  labels:
+    app: contrail-controller-config
+spec:
+  selector:
+    matchLabels:
+      app: contrail-controller-config
+  template:
+    metadata:
+      labels:
+        app: contrail-controller-config
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/config"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      initContainers:
+      - name: contrail-node-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        env:
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+      containers:
+      - name: contrail-controller-config-api
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-config-api:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-devicemgr
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-config-devicemgr:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-schema
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-config-schema:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-svcmonitor
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-config-svcmonitor:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      - name: contrail-controller-config-nodemgr
+        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: config
+        - name: CASSANDRA_CQL_PORT
+          value: "9041"
+        - name: CASSANDRA_JMX_LOCAL_PORT
+          value: "7201"
+        - name: CONFIG_NODEMGR__DEFAULTS__minimum_diskGB
+          value: "2"
+# todo: there is type Socket in new kubernetes, it is possible to use full
+# path:
+# hostPath:
+#   path: /var/run/docker.sock and
+#   type: Socket
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      - name: contrail-controller-config-provisioner
+        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: defaults-env
+        - configMapRef:
+            name: configzookeeperenv
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: config
+        - name: CONFIG_NODEMGR__DEFAULTS__minimum_diskGB
+          value: "2"
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: config-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: config-logs
+        hostPath:
+          path: /var/log/contrail/config
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin

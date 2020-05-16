@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-controller-webui
+  namespace: kube-system
+  labels:
+    app: contrail-controller-webui
+spec:
+  selector:
+    matchLabels:
+      app: contrail-controller-webui
+  template:
+    metadata:
+      labels:
+        app: contrail-controller-webui
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/webui"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      initContainers:
+      - name: contrail-node-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        env:
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+      containers:
+      - name: contrail-controller-webui-job
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-webui-job:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: webui-logs
+      - name: contrail-controller-webui-web
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-webui-web:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: webui-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: webui-logs
+        hostPath:
+          path: /var/log/contrail/webui
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin

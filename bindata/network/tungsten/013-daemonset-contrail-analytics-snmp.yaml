@@ -1,0 +1,133 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-analytics-snmp
+  namespace: kube-system
+  labels:
+    app: contrail-analytics-snmp
+spec:
+  selector:
+    matchLabels:
+      app: contrail-analytics-snmp
+  template:
+    metadata:
+      labels:
+        app: contrail-analytics-snmp
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/analytics_snmp"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      initContainers:
+      - name: contrail-node-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        env:
+        - name: NODE_TYPE
+          value: "analytics-snmp"
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: contrail-analyticsdb-config
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+        - mountPath: /host/var/lib
+          name: host-var-lib
+      containers:
+      - name: contrail-analytics-snmp-collector
+        image: "{{CONTRAIL_REGISTRY}}/contrail-analytics-snmp-collector:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-snmp-logs
+        env:
+        - name: NODE_TYPE
+          value: analytics-snmp
+      - name: contrail-analytics-snmp-topology
+        image: "{{CONTRAIL_REGISTRY}}/contrail-analytics-snmp-topology:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-snmp-logs
+        env:
+        - name: NODE_TYPE
+          value: analytics-snmp
+      - name: contrail-analytics-snmp-nodemgr
+        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        - configMapRef:
+            name: contrail-analyticsdb-config
+        env:
+        - name: NODE_TYPE
+          value: analytics-snmp
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-snmp-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      - name: contrail-analytics-snmp-provisioner
+        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: defaults-env
+        - configMapRef:
+            name: nodemgr-config
+        - configMapRef:
+            name: contrail-analyticsdb-config
+        env:
+        - name: NODE_TYPE
+          value: analytics-snmp
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-snmp-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: analytics-snmp-logs
+        hostPath:
+          path: /var/log/contrail/analytics-snmp
+      - name: host-var-lib
+        hostPath:
+          path: /var/lib
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin

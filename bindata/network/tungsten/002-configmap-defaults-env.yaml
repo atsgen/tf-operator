@@ -1,0 +1,7 @@
+# default params will be set in provisioner environment
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: defaults-env
+  namespace: kube-system
+data:

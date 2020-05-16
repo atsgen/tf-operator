@@ -1,0 +1,7 @@
+apiVersion: tungsten.atsgen.com/v1alpha1
+kind: TungstenCNI
+metadata:
+  name: example-tungstencni
+spec:
+  # Add fields here
+  size: 3

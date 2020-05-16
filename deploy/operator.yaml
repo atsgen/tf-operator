@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-operator
+  namespace: ats-tf-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tf-operator
+  template:
+    metadata:
+      labels:
+        name: tf-operator
+    spec:
+      serviceAccountName: tf-operator
+      containers:
+        - name: tf-operator
+          # Replace this with the built image name
+          image: REPLACE_IMAGE
+          command:
+          - tf-operator
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "tf-operator"

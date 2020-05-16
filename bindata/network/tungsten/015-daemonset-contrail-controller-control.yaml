@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-controller-control
+  namespace: kube-system
+  labels:
+    app: contrail-controller-control
+spec:
+  selector:
+    matchLabels:
+      app: contrail-controller-control
+  template:
+    metadata:
+      labels:
+        app: contrail-controller-control
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/control"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      initContainers:
+      - name: contrail-node-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        env:
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+      containers:
+      - name: contrail-controller-control
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-control-control:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: control-logs
+      - name: contrail-controller-control-dns
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-control-dns:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /etc/contrail
+          name: dns-config
+        - mountPath: /var/log/contrail
+          name: control-logs
+      - name: contrail-controller-control-named
+        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-control-named:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - mountPath: /etc/contrail
+          name: dns-config
+        - mountPath: /var/log/contrail
+          name: control-logs
+      - name: contrail-controller-nodemgr
+        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: control
+# todo: there is type Socket in new kubernetes, it is possible to use full
+# path:
+# hostPath:
+#   path: /var/run/docker.sock and
+#   type: Socket
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: control-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      - name: contrail-controller-provisioner
+        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: defaults-env
+        - configMapRef:
+            name: configzookeeperenv
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: control
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: control-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: control-logs
+        hostPath:
+          path: /var/log/contrail/control
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: dns-config
+        emptyDir: {}
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin

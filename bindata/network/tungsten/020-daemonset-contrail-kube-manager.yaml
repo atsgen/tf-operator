@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-kube-manager
+  namespace: kube-system
+  labels:
+    app: contrail-kube-manager
+spec:
+  selector:
+    matchLabels:
+      app: contrail-kube-manager
+  template:
+    metadata:
+      labels:
+        app: contrail-kube-manager
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/config"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoSchedule
+      automountServiceAccountToken: false
+      hostNetwork: true
+      initContainers:
+      - name: contrail-node-init
+        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        env:
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+      containers:
+      - name: contrail-kube-manager
+        image: "{{CONTRAIL_REGISTRY}}/contrail-kubernetes-kube-manager:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: kube-manager-config
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: kube-manager-logs
+        - mountPath: /tmp/serviceaccount
+          name: pod-secret
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: kube-manager-logs
+        hostPath:
+          path: /var/log/contrail/kube-manager
+      - name: pod-secret
+        secret:
+          secretName: contrail-kube-manager-token
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin

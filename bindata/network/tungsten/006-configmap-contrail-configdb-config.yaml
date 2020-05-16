@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: contrail-configdb-config
+  namespace: kube-system
+data:
+  JVM_EXTRA_OPTS: {{ JVM_EXTRA_OPTS }}
+  CASSANDRA_SEEDS: {{ CONFIGDB_NODES }}
+  CASSANDRA_CLUSTER_NAME: ContrailConfigDB
+  CASSANDRA_START_RPC: "true"
+  CASSANDRA_LISTEN_ADDRESS: auto
+  CASSANDRA_PORT: "9161"
+  CASSANDRA_CQL_PORT: "9041"
+  CASSANDRA_SSL_STORAGE_PORT: "7011"
+  CASSANDRA_STORAGE_PORT: "7010"
+  CASSANDRA_JMX_LOCAL_PORT: "7201"

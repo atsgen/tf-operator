@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: config-zookeeper
+  namespace: kube-system
+  labels:
+    app: config-zookeeper
+spec:
+  selector:
+    matchLabels:
+      app: config-zookeeper
+  template:
+    metadata:
+      labels:
+        app: config-zookeeper
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/configdb"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: config-zookeeper
+        image: "{{CONTRAIL_REGISTRY}}/contrail-external-zookeeper:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        env:
+        - name: NODE_TYPE
+          value: config-database
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        volumeMounts:
+        - mountPath: /var/lib/zookeeper
+          name: zookeeper-data
+        - mountPath: /var/log/zookeeper
+          name: zookeeper-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: zookeeper-data
+        hostPath:
+          path: /var/lib/contrail/config-zookeeper
+      - name: zookeeper-logs
+        hostPath:
+          path: /var/log/contrail/config-zookeeper

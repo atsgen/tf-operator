@@ -1,0 +1,50 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: redis
+  namespace: kube-system
+  labels:
+    app: redis
+spec:
+  selector:
+    matchLabels:
+      app: redis
+  template:
+    metadata:
+      labels:
+        app: redis
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/analytics"
+                operator: Exists
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/webui"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: redis
+        image: "{{CONTRAIL_REGISTRY}}/contrail-external-redis:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/lib/redis
+          name: redis-data
+        - mountPath: /var/log/redis
+          name: redis-logs
+      volumes:
+      - name: redis-data
+        hostPath:
+          path: /var/lib/contrail/redis
+      - name: redis-logs
+        hostPath:
+          path: /var/log/contrail/redis

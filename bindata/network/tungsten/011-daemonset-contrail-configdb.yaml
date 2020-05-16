@@ -1,0 +1,103 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: contrail-configdb
+  namespace: kube-system
+  labels:
+    app: contrail-configdb
+spec:
+  selector:
+    matchLabels:
+      app: contrail-configdb
+  template:
+    metadata:
+      labels:
+        app: contrail-configdb
+    spec:
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.opencontrail.org/configdb"
+                operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      hostNetwork: true
+      containers:
+      - name: contrail-configdb
+        image: "{{CONTRAIL_REGISTRY}}/contrail-external-cassandra:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        env:
+        - name: NODE_TYPE
+          value: config-database
+        envFrom:
+        - configMapRef:
+            name: contrail-configdb-config
+        volumeMounts:
+        - mountPath: /var/lib/cassandra
+          name: configdb-data
+        - mountPath: /var/log/cassandra
+          name: configdb-logs
+      - name: contrail-config-database-nodemgr
+        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        - configMapRef:
+            name: contrail-configdb-config
+        env:
+        - name: NODE_TYPE
+          value: config-database
+        - name: CONFIG_DATABASE_NODEMGR__DEFAULTS__minimum_diskGB
+          value: "2"
+# todo: there is type Socket in new kubernetes, it is possible to use full
+# path:
+# hostPath:
+#   path: /var/run/docker.sock and
+ #   type: Socket
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: configdb-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      - name: contrail-config-database-provisioner
+        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: defaults-env
+        - configMapRef:
+            name: nodemgr-config
+        - configMapRef:
+            name: contrail-configdb-config
+        env:
+        - name: NODE_TYPE
+          value: config-database
+        - name: CONFIG_DATABASE_NODEMGR__DEFAULTS__minimum_diskGB
+          value: "2"
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: configdb-logs
+      imagePullSecrets:
+      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: configdb-data
+        hostPath:
+          path: /var/lib/contrail/configdb
+      - name: configdb-logs
+        hostPath:
+          path: /var/log/contrail/configdb
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin
