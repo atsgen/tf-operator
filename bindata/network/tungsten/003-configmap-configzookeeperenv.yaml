@@ -4,6 +4,6 @@ metadata:
   name: configzookeeperenv
   namespace: kube-system
 data:
-  ZOOKEEPER_NODES: {{ CONFIGDB_NODES }}
-  ZOOKEEPER_PORT: "{{ ZOOKEEPER_PORT }}"
-  ZOOKEEPER_PORTS: "{{ ZOOKEEPER_PORTS }}"
+  ZOOKEEPER_NODES: {{ .CONFIGDB_NODES }}
+  ZOOKEEPER_PORT: "{{ .ZOOKEEPER_PORT }}"
+  ZOOKEEPER_PORTS: "{{ .ZOOKEEPER_PORTS }}"

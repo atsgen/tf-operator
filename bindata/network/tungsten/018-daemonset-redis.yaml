@@ -31,7 +31,7 @@ spec:
       hostNetwork: true
       containers:
       - name: redis
-        image: "{{CONTRAIL_REGISTRY}}/contrail-external-redis:{{CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-external-redis:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:

@@ -1,4 +1,5 @@
-FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+#FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
+FROM alpine as runtime
 
 ENV OPERATOR=/usr/local/bin/tf-operator \
     USER_UID=1001 \

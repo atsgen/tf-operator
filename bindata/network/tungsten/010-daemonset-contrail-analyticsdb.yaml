@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: contrail-analyticsdb
+  name: tungsten-analyticsdb
   namespace: kube-system
   labels:
-    app: contrail-analyticsdb
+    app: tungsten-analyticsdb
 spec:
   selector:
     matchLabels:
-      app: contrail-analyticsdb
+      app: tungsten-analyticsdb
   template:
     metadata:
       labels:
-        app: contrail-analyticsdb
+        app: tungsten-analyticsdb
     spec:
       affinity:
         nodeAffinity:
@@ -27,17 +27,17 @@ spec:
         effect: NoSchedule
       hostNetwork: true
       initContainers:
-      - name: contrail-node-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-node-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
           value: "database"
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
         envFrom:
         - configMapRef:
-            name: contrail-analyticsdb-config
+            name: tungsten-analyticsdb-config
         securityContext:
           privileged: true
         volumeMounts:
@@ -46,8 +46,8 @@ spec:
         - mountPath: /host/var/lib
           name: host-var-lib
       containers:
-      - name: contrail-analyticsdb-nodemgr
-        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analyticsdb-nodemgr
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -57,7 +57,7 @@ spec:
         - configMapRef:
             name: nodemgr-config
         - configMapRef:
-            name: contrail-analyticsdb-config
+            name: tungsten-analyticsdb-config
         env:
         - name: NODE_TYPE
           value: database
@@ -68,8 +68,8 @@ spec:
           name: analyticsdb-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: contrail-analyticsdb-provisioner
-        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analyticsdb-provisioner
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -81,7 +81,7 @@ spec:
         - configMapRef:
             name: nodemgr-config
         - configMapRef:
-            name: contrail-analyticsdb-config
+            name: tungsten-analyticsdb-config
         env:
         - name: NODE_TYPE
           value: database
@@ -90,22 +90,22 @@ spec:
         volumeMounts:
         - mountPath: /var/log/contrail
           name: analyticsdb-logs
-      - name: contrail-analyticsdb
-        image: "{{CONTRAIL_REGISTRY}}/contrail-external-cassandra:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analyticsdb
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-external-cassandra:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
           value: database
         envFrom:
         - configMapRef:
-            name: contrail-analyticsdb-config
+            name: tungsten-analyticsdb-config
         volumeMounts:
         - mountPath: /var/lib/cassandra
           name: analyticsdb-data
         - mountPath: /var/log/cassandra
           name: analyticsdb-logs
-      - name: contrail-analytics-query-engine
-        image: "{{CONTRAIL_REGISTRY}}/contrail-analytics-query-engine:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-query-engine
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-analytics-query-engine:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -121,7 +121,7 @@ spec:
         - mountPath: /var/log/contrail
           name: analyticsdb-logs
       imagePullSecrets:
-      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
       volumes:
       - name: analyticsdb-data
         hostPath:

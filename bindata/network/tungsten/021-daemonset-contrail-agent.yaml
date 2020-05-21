@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: contrail-agent
+  name: tungsten-agent
   namespace: kube-system
   labels:
-    app: contrail-agent
+    app: tungsten-agent
 spec:
   selector:
     matchLabels:
-      app: contrail-agent
+      app: tungsten-agent
   template:
     metadata:
       labels:
-        app: contrail-agent
+        app: tungsten-agent
     spec:
       #Disable affinity for single node setup
       affinity:
@@ -33,22 +33,22 @@ spec:
       automountServiceAccountToken: false
       hostNetwork: true
       initContainers:
-      - name: contrail-node-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-node-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
         envFrom:
         - configMapRef:
             name: env
         volumeMounts:
         - mountPath: /host/usr/bin
           name: host-usr-bin
-      - name: contrail-vrouter-kernel-init
-        image: "{{CONTRAIL_REGISTRY}}/{{VROUTER_KERNEL_INIT_IMAGE}}:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-vrouter-kernel-init
+        image: "{{ .CONTRAIL_REGISTRY}}/{{.VROUTER_KERNEL_INIT_IMAGE}}:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -64,8 +64,8 @@ spec:
           name: network-scripts
         - mountPath: /host/bin
           name: host-bin
-      - name: contrail-kubernetes-cni-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-kubernetes-cni-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -82,8 +82,8 @@ spec:
         - mountPath: /var/log/contrail
           name: agent-logs
       containers:
-      - name: contrail-vrouter-agent
-        image: "{{CONTRAIL_REGISTRY}}/contrail-vrouter-agent:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-vrouter-agent
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-vrouter-agent:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
         # is not present in the container. The mounting it into container
@@ -117,8 +117,8 @@ spec:
           name: var-crashes
         - mountPath: /tmp/serviceaccount
           name: pod-secret
-      - name: contrail-agent-nodemgr
-        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-agent-nodemgr
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -138,8 +138,8 @@ spec:
           name: agent-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: contrail-agent-provisioner
-        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-agent-provisioner
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -155,7 +155,7 @@ spec:
         - mountPath: /var/log/contrail
           name: agent-logs
       imagePullSecrets:
-      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
       volumes:
       - name: dev
         hostPath:
@@ -171,7 +171,7 @@ spec:
           path: /var/run
       - name: pod-secret
         secret:
-          secretName: contrail-kube-manager-token
+          secretName: tungsten-kube-manager-token
       - name: usr-src
         hostPath:
           path: /usr/src

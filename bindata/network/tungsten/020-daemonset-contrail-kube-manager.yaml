@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: contrail-kube-manager
+  name: tungsten-kube-manager
   namespace: kube-system
   labels:
-    app: contrail-kube-manager
+    app: tungsten-kube-manager
 spec:
   selector:
     matchLabels:
-      app: contrail-kube-manager
+      app: tungsten-kube-manager
   template:
     metadata:
       labels:
-        app: contrail-kube-manager
+        app: tungsten-kube-manager
     spec:
       affinity:
         nodeAffinity:
@@ -31,14 +31,14 @@ spec:
       automountServiceAccountToken: false
       hostNetwork: true
       initContainers:
-      - name: contrail-node-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-node-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
         envFrom:
         - configMapRef:
             name: env
@@ -46,8 +46,8 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       containers:
-      - name: contrail-kube-manager
-        image: "{{CONTRAIL_REGISTRY}}/contrail-kubernetes-kube-manager:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-kube-manager
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-kubernetes-kube-manager:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -60,14 +60,14 @@ spec:
         - mountPath: /tmp/serviceaccount
           name: pod-secret
       imagePullSecrets:
-      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
       volumes:
       - name: kube-manager-logs
         hostPath:
           path: /var/log/contrail/kube-manager
       - name: pod-secret
         secret:
-          secretName: contrail-kube-manager-token
+          secretName: tungsten-kube-manager-token
       - name: host-usr-bin
         hostPath:
           path: /usr/bin

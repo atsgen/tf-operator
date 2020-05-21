@@ -1,14 +1,17 @@
 package tungstencni
 
 import (
+//	"strings"
 	"context"
+	"path/filepath"
 
+	"github.com/pkg/errors"
 	tungstenv1alpha1 "github.com/atsgen/tf-operator/pkg/apis/tungsten/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
+//	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
+//	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -17,6 +20,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/manager"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
+	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"github.com/atsgen/tf-operator/pkg/apply"
+	"github.com/atsgen/tf-operator/pkg/render"
 )
 
 var log = logf.Log.WithName("controller_tungstencni")
@@ -25,6 +31,66 @@ var log = logf.Log.WithName("controller_tungstencni")
 * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
 * business logic.  Delete these comments after modifying this file.*
  */
+
+// TODO(Prabhjot) need to fix taking parameters from CNI Object
+func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.TungstenCNI) error {
+	objs := []*uns.Unstructured{}
+
+	data := render.MakeRenderData()
+	data.Data["AAA_MODE"] = "no-auth"
+	data.Data["ADMIN_PASSWORD"] = "atsgen"
+	data.Data["ANALYTICS_ALARM_NODES"] = "192.168.22.12"
+	data.Data["ANALYTICS_API_VIP"] = ""
+	data.Data["ANALYTICSDB_NODES"] = "192.168.22.12"
+	data.Data["ANALYTICS_NODES"] = "192.168.22.12"
+	data.Data["ANALYTICS_SNMP_NODES"] = "192.168.22.12"
+	data.Data["AUTH_MODE"] = "noauth"
+	data.Data["CLOUD_ORCHESTRATOR"] = "kubernetes"
+	data.Data["CONFIG_API_VIP"] = ""
+	data.Data["CONFIGDB_NODES"] = "192.168.22.12"
+	data.Data["CONFIG_NODES"] = "192.168.22.12"
+	data.Data["CONTRAIL_REGISTRY"] = "atsgen"
+	data.Data["CONTRAIL_CONTAINER_TAG"] = "R2003-latest"
+	data.Data["VROUTER_KERNEL_INIT_IMAGE"] = "contrail-vrouter-kernel-init"
+	data.Data["CONTROLLER_NODES"] = "192.168.22.12"
+	data.Data["CONTROL_NODES"] = "192.168.22.12"
+	data.Data["JVM_EXTRA_OPTS"] = "-Xms1g -Xmx2g"
+	data.Data["KAFKA_NODES"] = "192.168.22.12"
+	data.Data["KUBERNETES_API_SECURE_PORT"] = "6443"
+	data.Data["KUBERNETES_API_SERVER"] = "192.168.22.12"
+	data.Data["KUBERNETES_PUBLIC_FIP_POOL"] = ""
+	data.Data["KUBERNETES_SECRET_CONTRAIL_REPO"] = ""
+	data.Data["LOG_LEVEL"] = "SYS_NOTICE"
+	data.Data["METADATA_PROXY_SECRET"] = "tungsten"
+	data.Data["PHYSICAL_INTERFACE"] = ""
+	data.Data["RABBITMQ_NODE_PORT"] = "5673"
+	data.Data["RABBITMQ_NODES"] = "192.168.22.12"
+	data.Data["VROUTER_GATEWAY"] = ""
+	data.Data["WEBUI_NODES"] = "192.168.22.12"
+	data.Data["WEBUI_VIP"] = ""
+	data.Data["ZOOKEEPER_PORT"] = "2181"
+	data.Data["ZOOKEEPER_PORTS"] = "2888:3888"
+
+	manifests, err := render.RenderDir(filepath.Join("/bindata", "network/tungsten/"), &data)
+	if err != nil {
+		log.Info("Failed to render yaml files " + err.Error());
+		return err
+	}
+
+	objs = append(objs, manifests...)
+	for _, obj := range objs {
+		if err := controllerutil.SetControllerReference(cr, obj, r.scheme); err!= nil {
+			log.Info(err.Error())
+			return err
+		}
+		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
+			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
+			log.Info(err.Error())
+			return err
+		}
+	}
+	return nil
+}
 
 // Add creates a new TungstenCNI Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
@@ -90,7 +156,7 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 	instance := &tungstenv1alpha1.TungstenCNI{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			// Request object not found, could have been deleted after reconcile request.
 			// Owned objects are automatically garbage collected. For additional cleanup logic use finalizers.
 			// Return and don't requeue
@@ -100,54 +166,42 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	// Define a new Pod object
-	pod := newPodForCR(instance)
-
-	// Set TungstenCNI instance as the owner and controller
-	if err := controllerutil.SetControllerReference(instance, pod, r.scheme); err != nil {
-		return reconcile.Result{}, err
-	}
-
-	// Check if this Pod already exists
-	found := &corev1.Pod{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: pod.Name, Namespace: pod.Namespace}, found)
-	if err != nil && errors.IsNotFound(err) {
-		reqLogger.Info("Creating a new Pod", "Pod.Namespace", pod.Namespace, "Pod.Name", pod.Name)
-		err = r.client.Create(context.TODO(), pod)
-		if err != nil {
-			return reconcile.Result{}, err
+	_ = FetchNodeList(r.client)
+	r.renderTungstenFabricCNI(instance)
+/*
+	nodes := &corev1.NodeList{}
+	err = r.client.List(context.TODO(), nodes)
+	if err != nil {
+		reqLogger.Info("Prabhjot: failed reading nodes")
+	} else {
+		for ix := range nodes.Items {
+			node := nodes.Items[ix]
+			newNode := node.DeepCopy()
+			reqLogger.Info("Prabhjot found node: " + node.Name)
+			addresses := node.Status.Addresses
+			for _, address := range addresses {
+				if address.Type == corev1.NodeInternalIP {
+					reqLogger.Info("Prabhjot IP: " + address.Address)
+				}
+			}
+			newLabels := map[string]string{}
+			labels := node.GetLabels()
+			for key, element := range labels {
+				reqLogger.Info("Prabhjot label: " + key + ", value: " + element)
+				if !strings.Contains(key, "opencontrail") {
+					newLabels[key] = element
+				}
+			}
+			newNode.SetLabels(newLabels)
+			err = r.client.Update(context.TODO(), newNode)
+			if err != nil {
+				reqLogger.Info("Prabhjot: failed to update node labels ")
+			}
 		}
-
-		// Pod created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
-		return reconcile.Result{}, err
 	}
+*/
 
-	// Pod already exists - don't requeue
-	reqLogger.Info("Skip reconcile: Pod already exists", "Pod.Namespace", found.Namespace, "Pod.Name", found.Name)
+	log.Info("reconcile completed: Tungsten CNI " + instance.Name + " Updated")
 	return reconcile.Result{}, nil
 }
 
-// newPodForCR returns a busybox pod with the same name/namespace as the cr
-func newPodForCR(cr *tungstenv1alpha1.TungstenCNI) *corev1.Pod {
-	labels := map[string]string{
-		"app": cr.Name,
-	}
-	return &corev1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cr.Name + "-pod",
-			Namespace: cr.Namespace,
-			Labels:    labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:    "busybox",
-					Image:   "busybox",
-					Command: []string{"sleep", "3600"},
-				},
-			},
-		},
-	}
-}

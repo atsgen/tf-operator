@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: contrail-configdb
+  name: tungsten-configdb
   namespace: kube-system
   labels:
-    app: contrail-configdb
+    app: tungsten-configdb
 spec:
   selector:
     matchLabels:
-      app: contrail-configdb
+      app: tungsten-configdb
   template:
     metadata:
       labels:
-        app: contrail-configdb
+        app: tungsten-configdb
     spec:
       affinity:
         nodeAffinity:
@@ -27,22 +27,22 @@ spec:
         effect: NoSchedule
       hostNetwork: true
       containers:
-      - name: contrail-configdb
-        image: "{{CONTRAIL_REGISTRY}}/contrail-external-cassandra:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-configdb
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-external-cassandra:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
           value: config-database
         envFrom:
         - configMapRef:
-            name: contrail-configdb-config
+            name: tungsten-configdb-config
         volumeMounts:
         - mountPath: /var/lib/cassandra
           name: configdb-data
         - mountPath: /var/log/cassandra
           name: configdb-logs
-      - name: contrail-config-database-nodemgr
-        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-config-database-nodemgr
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -50,7 +50,7 @@ spec:
         - configMapRef:
             name: nodemgr-config
         - configMapRef:
-            name: contrail-configdb-config
+            name: tungsten-configdb-config
         env:
         - name: NODE_TYPE
           value: config-database
@@ -66,8 +66,8 @@ spec:
           name: configdb-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: contrail-config-database-provisioner
-        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-config-database-provisioner
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -77,7 +77,7 @@ spec:
         - configMapRef:
             name: nodemgr-config
         - configMapRef:
-            name: contrail-configdb-config
+            name: tungsten-configdb-config
         env:
         - name: NODE_TYPE
           value: config-database
@@ -87,7 +87,7 @@ spec:
         - mountPath: /var/log/contrail
           name: configdb-logs
       imagePullSecrets:
-      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
       volumes:
       - name: configdb-data
         hostPath:

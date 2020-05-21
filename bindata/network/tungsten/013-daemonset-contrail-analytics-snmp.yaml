@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: contrail-analytics-snmp
+  name: tungsten-analytics-snmp
   namespace: kube-system
   labels:
-    app: contrail-analytics-snmp
+    app: tungsten-analytics-snmp
 spec:
   selector:
     matchLabels:
-      app: contrail-analytics-snmp
+      app: tungsten-analytics-snmp
   template:
     metadata:
       labels:
-        app: contrail-analytics-snmp
+        app: tungsten-analytics-snmp
     spec:
       affinity:
         nodeAffinity:
@@ -27,19 +27,19 @@ spec:
         effect: NoSchedule
       hostNetwork: true
       initContainers:
-      - name: contrail-node-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-node-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
           value: "analytics-snmp"
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
         envFrom:
         - configMapRef:
             name: env
         - configMapRef:
-            name: contrail-analyticsdb-config
+            name: tungsten-analyticsdb-config
         securityContext:
           privileged: true
         volumeMounts:
@@ -48,8 +48,8 @@ spec:
         - mountPath: /host/var/lib
           name: host-var-lib
       containers:
-      - name: contrail-analytics-snmp-collector
-        image: "{{CONTRAIL_REGISTRY}}/contrail-analytics-snmp-collector:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-snmp-collector
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-analytics-snmp-collector:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -62,8 +62,8 @@ spec:
         env:
         - name: NODE_TYPE
           value: analytics-snmp
-      - name: contrail-analytics-snmp-topology
-        image: "{{CONTRAIL_REGISTRY}}/contrail-analytics-snmp-topology:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-snmp-topology
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-analytics-snmp-topology:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -76,8 +76,8 @@ spec:
         env:
         - name: NODE_TYPE
           value: analytics-snmp
-      - name: contrail-analytics-snmp-nodemgr
-        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-snmp-nodemgr
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -87,7 +87,7 @@ spec:
         - configMapRef:
             name: nodemgr-config
         - configMapRef:
-            name: contrail-analyticsdb-config
+            name: tungsten-analyticsdb-config
         env:
         - name: NODE_TYPE
           value: analytics-snmp
@@ -96,8 +96,8 @@ spec:
           name: analytics-snmp-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: contrail-analytics-snmp-provisioner
-        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-snmp-provisioner
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -109,7 +109,7 @@ spec:
         - configMapRef:
             name: nodemgr-config
         - configMapRef:
-            name: contrail-analyticsdb-config
+            name: tungsten-analyticsdb-config
         env:
         - name: NODE_TYPE
           value: analytics-snmp
@@ -117,7 +117,7 @@ spec:
         - mountPath: /var/log/contrail
           name: analytics-snmp-logs
       imagePullSecrets:
-      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
       volumes:
       - name: analytics-snmp-logs
         hostPath:

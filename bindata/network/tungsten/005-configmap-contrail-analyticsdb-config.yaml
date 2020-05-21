@@ -1,11 +1,11 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: contrail-analyticsdb-config
+  name: tungsten-analyticsdb-config
   namespace: kube-system
 data:
-  JVM_EXTRA_OPTS: {{ JVM_EXTRA_OPTS }}
-  CASSANDRA_SEEDS: {{ ANALYTICSDB_NODES }}
+  JVM_EXTRA_OPTS: {{ .JVM_EXTRA_OPTS }}
+  CASSANDRA_SEEDS: {{ .ANALYTICSDB_NODES }}
   CASSANDRA_CLUSTER_NAME: Contrail
   CASSANDRA_START_RPC: "true"
   CASSANDRA_LISTEN_ADDRESS: auto

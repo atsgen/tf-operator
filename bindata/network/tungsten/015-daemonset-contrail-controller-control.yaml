@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: contrail-controller-control
+  name: tungsten-controller-control
   namespace: kube-system
   labels:
-    app: contrail-controller-control
+    app: tungsten-controller-control
 spec:
   selector:
     matchLabels:
-      app: contrail-controller-control
+      app: tungsten-controller-control
   template:
     metadata:
       labels:
-        app: contrail-controller-control
+        app: tungsten-controller-control
     spec:
       affinity:
         nodeAffinity:
@@ -27,14 +27,14 @@ spec:
         effect: NoSchedule
       hostNetwork: true
       initContainers:
-      - name: contrail-node-init
-        image: "{{CONTRAIL_REGISTRY}}/contrail-node-init:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-node-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{CONTRAIL_REGISTRY}}/contrail-status:{{CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
         envFrom:
         - configMapRef:
             name: env
@@ -42,8 +42,8 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       containers:
-      - name: contrail-controller-control
-        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-control-control:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-controller-control
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-control-control:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -51,8 +51,8 @@ spec:
         volumeMounts:
         - mountPath: /var/log/contrail
           name: control-logs
-      - name: contrail-controller-control-dns
-        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-control-dns:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-controller-control-dns
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-control-dns:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -62,8 +62,8 @@ spec:
           name: dns-config
         - mountPath: /var/log/contrail
           name: control-logs
-      - name: contrail-controller-control-named
-        image: "{{CONTRAIL_REGISTRY}}/contrail-controller-control-named:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-controller-control-named
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-control-named:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -75,8 +75,8 @@ spec:
           name: dns-config
         - mountPath: /var/log/contrail
           name: control-logs
-      - name: contrail-controller-nodemgr
-        image: "{{CONTRAIL_REGISTRY}}/contrail-nodemgr:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-controller-nodemgr
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -98,8 +98,8 @@ spec:
           name: control-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: contrail-controller-provisioner
-        image: "{{CONTRAIL_REGISTRY}}/contrail-provisioner:{{CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-controller-provisioner
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -117,7 +117,7 @@ spec:
         - mountPath: /var/log/contrail
           name: control-logs
       imagePullSecrets:
-      - name: {{ KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
       volumes:
       - name: control-logs
         hostPath:
