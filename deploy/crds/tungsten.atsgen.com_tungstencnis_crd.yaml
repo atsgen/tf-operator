@@ -9,7 +9,7 @@ spec:
     listKind: TungstenCNIList
     plural: tungstencnis
     singular: tungstencni
-  scope: Namespaced
+  scope: Cluster
   subresources:
     status: {}
   validation:

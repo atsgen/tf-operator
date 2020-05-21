@@ -4,4 +4,6 @@ metadata:
   name: example-tungstencni
 spec:
   # Add fields here
+  releasetag: R2003-latest
+  usevpp: true
   size: 3
