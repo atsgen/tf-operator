@@ -41,15 +41,15 @@ func SetNodeLabels(cl client.Client, nodeName string, labels []string) error {
 
 	newNode := node.DeepCopy()
 	// delete previous labels
-	delete(newNode.Labels, "node-role.opencontrail.org/agent")
-	delete(newNode.Labels, "node-role.opencontrail.org/analytics")
-	delete(newNode.Labels, "node-role.opencontrail.org/analytics_alarm")
-	delete(newNode.Labels, "node-role.opencontrail.org/analytics_snmp")
-	delete(newNode.Labels, "node-role.opencontrail.org/analyticsdb")
-	delete(newNode.Labels, "node-role.opencontrail.org/config")
-	delete(newNode.Labels, "node-role.opencontrail.org/configdb")
-	delete(newNode.Labels, "node-role.opencontrail.org/control")
-	delete(newNode.Labels, "node-role.opencontrail.org/webui")
+	delete(newNode.Labels, "node-role.tungsten.io/agent")
+	delete(newNode.Labels, "node-role.tungsten.io/analytics")
+	delete(newNode.Labels, "node-role.tungsten.io/analytics_alarm")
+	delete(newNode.Labels, "node-role.tungsten.io/analytics_snmp")
+	delete(newNode.Labels, "node-role.tungsten.io/analyticsdb")
+	delete(newNode.Labels, "node-role.tungsten.io/config")
+	delete(newNode.Labels, "node-role.tungsten.io/configdb")
+	delete(newNode.Labels, "node-role.tungsten.io/control")
+	delete(newNode.Labels, "node-role.tungsten.io/webui")
 
 	for _,label := range labels {
 		newNode.Labels[label] = ""
