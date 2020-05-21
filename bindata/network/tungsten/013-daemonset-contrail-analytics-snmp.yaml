@@ -19,7 +19,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.opencontrail.org/analytics_snmp"
+              - key: "node-role.tungsten.io/analytics_snmp"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master

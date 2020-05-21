@@ -20,7 +20,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.opencontrail.org/agent"
+              - key: "node-role.tungsten.io/agent"
                 operator: Exists
       #Enable tolerations for single node setup
       tolerations:

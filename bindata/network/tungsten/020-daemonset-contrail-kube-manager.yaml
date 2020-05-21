@@ -19,7 +19,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.opencontrail.org/config"
+              - key: "node-role.tungsten.io/config"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master

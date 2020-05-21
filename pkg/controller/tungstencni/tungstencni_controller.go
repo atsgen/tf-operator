@@ -1,7 +1,6 @@
 package tungstencni
 
 import (
-//	"strings"
 	"context"
 	"path/filepath"
 
@@ -9,9 +8,7 @@ import (
 	tungstenv1alpha1 "github.com/atsgen/tf-operator/pkg/apis/tungsten/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
-//	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-//	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -36,37 +33,69 @@ var log = logf.Log.WithName("controller_tungstencni")
 func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.TungstenCNI) error {
 	objs := []*uns.Unstructured{}
 
+	nodes, e := FetchNodeList(r.client)
+
+	if e != nil {
+		return e
+	}
+
+	agentLabels := []string{"node-role.tungsten.io/agent"}
+	allLabels := []string{"node-role.tungsten.io/agent",
+				"node-role.tungsten.io/analytics",
+				"node-role.tungsten.io/analytics_alarm",
+				"node-role.tungsten.io/analytics_snmp",
+				"node-role.tungsten.io/analyticsdb",
+				"node-role.tungsten.io/config",
+				"node-role.tungsten.io/configdb",
+				"node-role.tungsten.io/control",
+				"node-role.tungsten.io/webui"}
+	for _, name := range nodes.Nodes {
+		// enable agent for all nodes
+		e = SetNodeLabels(r.client, name, agentLabels)
+		if e != nil {
+			return e
+		}
+	}
+
+	for _, name := range nodes.MasterNodes {
+		// enable all labels for master nodes
+		e = SetNodeLabels(r.client, name, allLabels)
+		if e != nil {
+			return e
+		}
+	}
+
 	data := render.MakeRenderData()
 	data.Data["AAA_MODE"] = "no-auth"
 	data.Data["ADMIN_PASSWORD"] = "atsgen"
-	data.Data["ANALYTICS_ALARM_NODES"] = "192.168.22.12"
+	data.Data["ANALYTICS_ALARM_NODES"] = nodes.MasterNodesStr
 	data.Data["ANALYTICS_API_VIP"] = ""
-	data.Data["ANALYTICSDB_NODES"] = "192.168.22.12"
-	data.Data["ANALYTICS_NODES"] = "192.168.22.12"
-	data.Data["ANALYTICS_SNMP_NODES"] = "192.168.22.12"
+	data.Data["ANALYTICSDB_NODES"] = nodes.MasterNodesStr
+	data.Data["ANALYTICS_NODES"] = nodes.MasterNodesStr
+	data.Data["ANALYTICS_SNMP_NODES"] = nodes.MasterNodesStr
 	data.Data["AUTH_MODE"] = "noauth"
 	data.Data["CLOUD_ORCHESTRATOR"] = "kubernetes"
 	data.Data["CONFIG_API_VIP"] = ""
-	data.Data["CONFIGDB_NODES"] = "192.168.22.12"
-	data.Data["CONFIG_NODES"] = "192.168.22.12"
+	data.Data["CONFIGDB_NODES"] = nodes.MasterNodesStr
+	data.Data["CONFIG_NODES"] = nodes.MasterNodesStr
 	data.Data["CONTRAIL_REGISTRY"] = "atsgen"
-	data.Data["CONTRAIL_CONTAINER_TAG"] = "R2003-latest"
+	data.Data["CONTRAIL_CONTAINER_TAG"] = cr.Spec.ReleaseTag
 	data.Data["VROUTER_KERNEL_INIT_IMAGE"] = "contrail-vrouter-kernel-init"
-	data.Data["CONTROLLER_NODES"] = "192.168.22.12"
-	data.Data["CONTROL_NODES"] = "192.168.22.12"
+	data.Data["CONTROLLER_NODES"] = nodes.MasterNodesStr
+	data.Data["CONTROL_NODES"] = nodes.MasterNodesStr
 	data.Data["JVM_EXTRA_OPTS"] = "-Xms1g -Xmx2g"
-	data.Data["KAFKA_NODES"] = "192.168.22.12"
+	data.Data["KAFKA_NODES"] = nodes.MasterNodesStr
 	data.Data["KUBERNETES_API_SECURE_PORT"] = "6443"
-	data.Data["KUBERNETES_API_SERVER"] = "192.168.22.12"
+	data.Data["KUBERNETES_API_SERVER"] = nodes.MasterNodesStr
 	data.Data["KUBERNETES_PUBLIC_FIP_POOL"] = ""
 	data.Data["KUBERNETES_SECRET_CONTRAIL_REPO"] = ""
 	data.Data["LOG_LEVEL"] = "SYS_NOTICE"
 	data.Data["METADATA_PROXY_SECRET"] = "tungsten"
 	data.Data["PHYSICAL_INTERFACE"] = ""
 	data.Data["RABBITMQ_NODE_PORT"] = "5673"
-	data.Data["RABBITMQ_NODES"] = "192.168.22.12"
+	data.Data["RABBITMQ_NODES"] = nodes.MasterNodesStr
 	data.Data["VROUTER_GATEWAY"] = ""
-	data.Data["WEBUI_NODES"] = "192.168.22.12"
+	data.Data["WEBUI_NODES"] = nodes.MasterNodesStr
 	data.Data["WEBUI_VIP"] = ""
 	data.Data["ZOOKEEPER_PORT"] = "2181"
 	data.Data["ZOOKEEPER_PORTS"] = "2888:3888"
@@ -166,7 +195,7 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	_ = FetchNodeList(r.client)
+	//_ = FetchNodeList(r.client)
 	r.renderTungstenFabricCNI(instance)
 /*
 	nodes := &corev1.NodeList{}

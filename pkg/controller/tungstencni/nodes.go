@@ -2,13 +2,18 @@ package tungstencni
 
 import (
 	"context"
+	"errors"
+	"strconv"
+
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 type NodeList struct {
-	MasterNodes    map[string]bool
-	Nodes          map[string]bool
+	MasterNodes    map[string]string
+	Nodes          map[string]string
+	MasterNodesStr string
+	NodesStr       string
 }
 
 type TungstenRoleList struct {
@@ -20,12 +25,47 @@ var nodeList *NodeList
 
 func newNodeList() (n *NodeList) {
 	nl := new(NodeList)
-	nl.MasterNodes = make(map[string]bool)
-	nl.Nodes = make(map[string]bool)
+	nl.MasterNodes = make(map[string]string)
+	nl.Nodes = make(map[string]string)
 	return nl
 }
 
-func FetchNodeList(client client.Client) (n *NodeList) {
+func SetNodeLabels(cl client.Client, nodeName string, labels []string) error {
+	node := &corev1.Node{}
+
+	err := cl.Get(context.TODO(), client.ObjectKey{Name: nodeName}, node)
+	if err != nil {
+		log.Info("Prabhjot Failed to get node with error " + err.Error())
+		return err
+	}
+
+	newNode := node.DeepCopy()
+	// delete previous labels
+	delete(newNode.Labels, "node-role.opencontrail.org/agent")
+	delete(newNode.Labels, "node-role.opencontrail.org/analytics")
+	delete(newNode.Labels, "node-role.opencontrail.org/analytics_alarm")
+	delete(newNode.Labels, "node-role.opencontrail.org/analytics_snmp")
+	delete(newNode.Labels, "node-role.opencontrail.org/analyticsdb")
+	delete(newNode.Labels, "node-role.opencontrail.org/config")
+	delete(newNode.Labels, "node-role.opencontrail.org/configdb")
+	delete(newNode.Labels, "node-role.opencontrail.org/control")
+	delete(newNode.Labels, "node-role.opencontrail.org/webui")
+
+	for _,label := range labels {
+		newNode.Labels[label] = ""
+	}
+
+	err = cl.Patch(context.TODO(), newNode, client.MergeFrom(node))
+	if err != nil {
+		log.Info("Prabhjot Failed to patch node with error " + err.Error())
+		return err
+	}
+
+
+	return nil
+}
+
+func FetchNodeList(client client.Client) (*NodeList, error) {
 	nodeList = newNodeList()
 	nodes := &corev1.NodeList{}
 	err := client.List(context.TODO(), nodes)
@@ -33,38 +73,44 @@ func FetchNodeList(client client.Client) (n *NodeList) {
 		for ix := range nodes.Items {
 			node := nodes.Items[ix]
 			var ipAddress string
-			log.Info("Prabhjot found node: " + node.Name)
 			addresses := node.Status.Addresses
 			for _, address := range addresses {
 				if address.Type == corev1.NodeInternalIP {
 					ipAddress = address.Address
-					log.Info("Prabhjot IP: " + address.Address)
 					break
 				}
 			}
 			labels := node.GetLabels()
 			var isMaster bool
-			for key, element := range labels {
-				log.Info("Prabhjot label: " + key + ", value: " + element)
+			for key, _ := range labels {
 				if key == "node-role.kubernetes.io/master" {
 					isMaster = true
 				}
 			}
 			if ipAddress != "" {
+				log.Info("discovered node: " + node.Name + ", ip: " + ipAddress + ", is master: " + strconv.FormatBool(isMaster))
 				if isMaster {
-					nodeList.MasterNodes[ipAddress] = true
+					nodeList.MasterNodes[ipAddress] = node.Name
+					if nodeList.MasterNodesStr == "" {
+						nodeList.MasterNodesStr = ipAddress
+					} else {
+						nodeList.MasterNodesStr = nodeList.MasterNodesStr + "," + ipAddress
+					}
 				}
-				nodeList.Nodes[ipAddress] = true
+				nodeList.Nodes[ipAddress] = node.Name
+				if nodeList.NodesStr == "" {
+					nodeList.NodesStr = ipAddress
+				} else {
+					nodeList.NodesStr = nodeList.NodesStr + "," + ipAddress
+				}
+			} else {
+				log.Info("Error! discovered node: " + node.Name + ", without ip")
+				return nil, errors.New("node discovered without ip")
 			}
 		}
 	} else {
-		log.Info("Prabhjot: failed reading nodes")
+		log.Info("Failed reading node information from cluster")
+		return nil, err
 	}
-	for key, _ := range nodeList.MasterNodes {
-		log.Info("Master node found: " + key)
-	}
-	for key, _ := range nodeList.Nodes {
-		log.Info("Node found: " + key)
-	}
-	return nodeList
+	return nodeList, nil
 }
