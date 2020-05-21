@@ -40,11 +40,7 @@ kubectl create -f deploy/crds/atsgen.com_tungstencnis_crd.yaml
 kubectl create -f deploy/operator.yaml
 ```
 
-tf operator based installation needs following labels set on relevant nodes
-```
-kubectl label node opencontrail.org/controller=enabled --all
-kubectl label node opencontrail.org/vrouter-kernel=enabled --all
-```
+tf operator assumes to enable tungsten fabric controller on master nodes only and vrouter on all the nodes.
 
 Once everything is ready the cluster can be rolled out using
 ```
