@@ -13,7 +13,7 @@ type TungstenCNISpec struct {
 	// Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 	// Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 	ReleaseTag string `json:"releasetag"`
-	UseVpp     bool   `json:"usevpp"`
+	UseVrouter bool   `json:"usevrouter,omitempty"`
 }
 
 // TungstenCNIStatus defines the observed state of TungstenCNI
@@ -27,7 +27,7 @@ type TungstenCNIStatus struct {
 
 // TungstenCNI is the Schema for the tungstencnis API
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=tungstencnis,scope=Namespaced
+// +kubebuilder:resource:path=tungstencnis,scope=Cluster
 type TungstenCNI struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`

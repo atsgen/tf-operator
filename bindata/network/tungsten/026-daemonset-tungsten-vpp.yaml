@@ -1,0 +1,247 @@
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: tungsten-vpp
+  namespace: kube-system
+  labels:
+    app: tungsten-agent
+spec:
+  selector:
+    matchLabels:
+      app: tungsten-agent
+  template:
+    metadata:
+      labels:
+        app: tungsten-agent
+    spec:
+      #Disable affinity for single node setup
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: "node-role.tungsten.io/vpp"
+                operator: Exists
+      #Enable tolerations for single node setup
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoSchedule
+      automountServiceAccountToken: false
+      hostNetwork: true
+      hostPID: true
+      initContainers:
+      - name: tungsten-node-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        env:
+        - name: CONTRAIL_STATUS_IMAGE
+          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /host/usr/bin
+          name: host-usr-bin
+      - name: tungsten-vpp-init
+        image: "{{ .CONTRAIL_REGISTRY}}/tungsten-vpp-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /usr/src
+          name: usr-src
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /etc/sysconfig/network-scripts
+          name: network-scripts
+        - mountPath: /host/bin
+          name: host-bin
+      - name: tungsten-kubernetes-cni-init
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /var/lib/contrail
+          name: var-lib-contrail
+        - mountPath: /host/etc_cni
+          name: etc-cni
+        - mountPath: /host/opt_cni_bin
+          name: opt-cni-bin
+        - mountPath: /host/log_cni
+          name: var-log-contrail-cni
+        - mountPath: /var/log/contrail
+          name: agent-logs
+      containers:
+      - name: tungsten-vpp-agent
+        image: "{{ .CONTRAIL_REGISTRY}}/tungsten-vpp-agent:{{ .CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
+        # is not present in the container. The mounting it into container
+        # doesnt help because of permissions are not enough syscalls,
+        # e.g. https://github.com/Juniper/contrail-controller/blob/master/src/vnsw/agent/contrail/linux/pkt0_interface.cc: 48.
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        volumeMounts:
+        - mountPath: /dev
+          name: dev
+        - mountPath: /etc/sysconfig/network-scripts
+          name: network-scripts
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /host/bin
+          name: host-bin
+        - mountPath: /var/log/contrail
+          name: agent-logs
+        - mountPath: /usr/src
+          name: usr-src
+        - mountPath: /var/lib/contrail
+          name: var-lib-contrail
+        - mountPath: /var/crashes
+          name: var-crashes
+        - mountPath: /tmp/serviceaccount
+          name: pod-secret
+      - name: tungsten-vpp-nodemgr
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: vrouter
+# todo: there is type Socket in new kubernetes, it is possible to use full
+# path:
+# hostPath:
+#   path: /var/run/docker.sock and
+#   type: Socket
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: agent-logs
+        - mountPath: /mnt
+          name: docker-unix-socket
+      - name: tungsten-vpp-datapath
+        image: "{{ .CONTRAIL_REGISTRY}}/tungsten-vpp-datapath:{{ .CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
+        # is not present in the container. The mounting it into container
+        # doesnt help because of permissions are not enough syscalls,
+        # e.g. https://github.com/Juniper/contrail-controller/blob/master/src/vnsw/agent/contrail/linux/pkt0_interface.cc: 48.
+        securityContext:
+          privileged: true
+        envFrom:
+        - configMapRef:
+            name: env
+        resources:
+          limits:
+            hugepages-2Mi: 4Gi
+            memory: 4Gi
+          requests:
+            memory: 4Gi
+        volumeMounts:
+        - mountPath: /dev
+          name: dev
+        - mountPath: /lib/modules
+          name: lib-modules
+        - mountPath: /etc/sysconfig/network-scripts
+          name: network-scripts
+        - mountPath: /var/run
+          name: var-run
+        - mountPath: /host/bin
+          name: host-bin
+        - mountPath: /var/log/contrail
+          name: agent-logs
+        - mountPath: /usr/src
+          name: usr-src
+        - mountPath: /var/lib/contrail
+          name: var-lib-contrail
+        - mountPath: /var/crashes
+          name: var-crashes
+        - mountPath: /tmp/serviceaccount
+          name: pod-secret
+        - mountPath: /dev/hugepages
+          name: hugepages-medium
+      - name: tungsten-vpp-provisioner
+        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: defaults-env
+        - configMapRef:
+            name: nodemgr-config
+        env:
+        - name: NODE_TYPE
+          value: vrouter
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: agent-logs
+      imagePullSecrets:
+      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      volumes:
+      - name: dev
+        hostPath:
+          path: /dev
+      - name: lib-modules
+        hostPath:
+          path: /lib/modules
+      - name: network-scripts
+        hostPath:
+          path: /etc/sysconfig/network-scripts
+      - name: var-run
+        hostPath:
+          path: /var/run
+      - name: host-bin
+        hostPath:
+          path: /bin
+      - name: docker-unix-socket
+        hostPath:
+          path: /var/run
+      - name: pod-secret
+        secret:
+          secretName: tungsten-kube-manager-token
+      - name: usr-src
+        hostPath:
+          path: /usr/src
+      - name: var-lib-contrail
+        hostPath:
+          path: /var/lib/contrail
+      - name: var-crashes
+        hostPath:
+          path: /var/contrail/crashes
+      - name: etc-cni
+        hostPath:
+          path: /etc/cni
+      - name: opt-cni-bin
+        hostPath:
+          path: /opt/cni/bin
+      - name: var-log-contrail-cni
+        hostPath:
+          path: /var/log/contrail/cni
+      - name: agent-logs
+        hostPath:
+          path: /var/log/contrail/agent
+      - name: host-usr-bin
+        hostPath:
+          path: /usr/bin
+      - name: hugepages-medium
+        emptyDir:
+          medium: HugePages
+
+# Meta information section

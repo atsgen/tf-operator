@@ -1,9 +1,7 @@
 apiVersion: tungsten.atsgen.com/v1alpha1
 kind: TungstenCNI
 metadata:
-  name: example-tungstencni
+  name: example-deployment
 spec:
-  # Add fields here
   releasetag: R2003-latest
-  usevpp: true
-  size: 3
+  usevrouter: true

@@ -11,7 +11,7 @@ import (
 
 type NodeList struct {
 	MasterNodes    map[string]string
-	Nodes          map[string]string
+	WorkerNodes    map[string]string
 	MasterNodesStr string
 	NodesStr       string
 }
@@ -26,7 +26,7 @@ var nodeList *NodeList
 func newNodeList() (n *NodeList) {
 	nl := new(NodeList)
 	nl.MasterNodes = make(map[string]string)
-	nl.Nodes = make(map[string]string)
+	nl.WorkerNodes = make(map[string]string)
 	return nl
 }
 
@@ -41,6 +41,7 @@ func SetNodeLabels(cl client.Client, nodeName string, labels []string) error {
 
 	newNode := node.DeepCopy()
 	// delete previous labels
+	delete(newNode.Labels, "node-role.tungsten.io/vpp")
 	delete(newNode.Labels, "node-role.tungsten.io/agent")
 	delete(newNode.Labels, "node-role.tungsten.io/analytics")
 	delete(newNode.Labels, "node-role.tungsten.io/analytics_alarm")
@@ -96,8 +97,9 @@ func FetchNodeList(client client.Client) (*NodeList, error) {
 					} else {
 						nodeList.MasterNodesStr = nodeList.MasterNodesStr + "," + ipAddress
 					}
+				} else {
+					nodeList.WorkerNodes[ipAddress] = node.Name
 				}
-				nodeList.Nodes[ipAddress] = node.Name
 				if nodeList.NodesStr == "" {
 					nodeList.NodesStr = ipAddress
 				} else {

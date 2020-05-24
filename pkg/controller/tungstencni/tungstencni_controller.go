@@ -39,17 +39,21 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 		return e
 	}
 
-	agentLabels := []string{"node-role.tungsten.io/agent"}
-	allLabels := []string{"node-role.tungsten.io/agent",
-				"node-role.tungsten.io/analytics",
-				"node-role.tungsten.io/analytics_alarm",
-				"node-role.tungsten.io/analytics_snmp",
-				"node-role.tungsten.io/analyticsdb",
-				"node-role.tungsten.io/config",
-				"node-role.tungsten.io/configdb",
-				"node-role.tungsten.io/control",
-				"node-role.tungsten.io/webui"}
-	for _, name := range nodes.Nodes {
+	computeRole := NODE_ROLE_VPP
+	if cr.Spec.UseVrouter {
+		computeRole = NODE_ROLE_VROUTER
+	}
+	agentLabels := []string{computeRole}
+	allLabels := []string{computeRole,
+				NODE_ROLE_ANALYTICS,
+				NODE_ROLE_ANALYTICS_ALARM,
+				NODE_ROLE_ANALYTICS_SNMP,
+				NODE_ROLE_ANALYTICS_DB,
+				NODE_ROLE_CONFIG,
+				NODE_ROLE_CONFIG_DB,
+				NODE_ROLE_CONTROL,
+				NODE_ROLE_WEBUI}
+	for _, name := range nodes.WorkerNodes {
 		// enable agent for all nodes
 		e = SetNodeLabels(r.client, name, agentLabels)
 		if e != nil {
@@ -99,6 +103,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data.Data["WEBUI_VIP"] = ""
 	data.Data["ZOOKEEPER_PORT"] = "2181"
 	data.Data["ZOOKEEPER_PORTS"] = "2888:3888"
+	data.Data["DPDK_UIO_DRIVER"] = "igb_uio"
 
 	manifests, err := render.RenderDir(filepath.Join("/bindata", "network/tungsten/"), &data)
 	if err != nil {
