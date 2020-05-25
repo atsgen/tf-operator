@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   name: tungsten-configdb
-  namespace: kube-system
+  namespace: {{ .TF_NAMESPACE }}
   labels:
     app: tungsten-configdb
 spec:

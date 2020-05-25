@@ -70,6 +70,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	}
 
 	data := render.MakeRenderData()
+	data.Data["TF_NAMESPACE"] = TF_NAMESPACE
 	data.Data["AAA_MODE"] = "no-auth"
 	data.Data["ADMIN_PASSWORD"] = "atsgen"
 	data.Data["ANALYTICS_ALARM_NODES"] = nodes.MasterNodesStr

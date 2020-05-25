@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: configzookeeperenv
-  namespace: kube-system
+  namespace: {{ .TF_NAMESPACE }}
 data:
   ZOOKEEPER_NODES: {{ .CONFIGDB_NODES }}
   ZOOKEEPER_PORT: "{{ .ZOOKEEPER_PORT }}"

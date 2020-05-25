@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: env
-  namespace: kube-system
+  namespace: {{ .TF_NAMESPACE }}
 data:
   AAA_MODE: {{ .AAA_MODE }}
   ANALYTICS_API_VIP: "{{ .ANALYTICS_API_VIP }}"

@@ -2,7 +2,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: kube-manager-config
-  namespace: kube-system
+  namespace: {{ .TF_NAMESPACE }}
 data:
   KUBERNETES_API_SERVER: {{ .KUBERNETES_API_SERVER }}
   KUBERNETES_API_SECURE_PORT: "{{ .KUBERNETES_API_SECURE_PORT }}"

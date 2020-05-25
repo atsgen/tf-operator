@@ -36,15 +36,13 @@ spec:
         metadata:
           type: object
         spec:
-          description: TungstenCNISpec defines the desired state of TungstenCNI
+          description: Define the desired TungstenCNI deployment parameters
           properties:
             releasetag:
-              description: 'INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-                Important: Run "operator-sdk generate k8s" to regenerate code after
-                modifying this file Add custom validation using kubebuilder tags:
-                https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html'
+              description: release tag for the container images used
               type: string
             usevrouter:
+              description: use vrouter as datpath for CNI
               type: boolean
           required:
           - releasetag
