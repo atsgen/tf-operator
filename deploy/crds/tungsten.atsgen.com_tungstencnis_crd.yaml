@@ -3,6 +3,13 @@ kind: CustomResourceDefinition
 metadata:
   name: tungstencnis.tungsten.atsgen.com
 spec:
+  additionalPrinterColumns:
+  - JSONPath: .spec.releasetag
+    name: Release
+    type: string
+  - JSONPath: .metadata.creationTimestamp
+    name: Age
+    type: date
   group: tungsten.atsgen.com
   names:
     kind: TungstenCNI

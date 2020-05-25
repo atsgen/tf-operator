@@ -183,6 +183,11 @@ type ReconcileTungstenCNI struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	if request.Name != TF_OPERATOR_CONFIG {
+		log.Info("Error!!! Ignoring tf-operator " + request.Name)
+		return reconcile.Result{}, nil
+	}
+
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling TungstenCNI")
 

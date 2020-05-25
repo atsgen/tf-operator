@@ -114,8 +114,20 @@ func main() {
 		os.Exit(1)
 	}
 
+	// TODO(Prabhjot) since we are running with cluster scope
+	// so as a workaround add metrics to operator namespace
+	// operatorNs, err := k8sutil.GetOperatorNamespace()
+	// if err != nil {
+	//	log.Error(err, "Failed to get operator namespace")
+	// }
 	// Add the Metrics Service
-	addMetrics(ctx, cfg, namespace)
+	// TODO(Prabhjot) for now skip metrics for clusterscoped
+	// it results in many error messages
+	// refer to https://github.com/operator-framework/operator-sdk/issues/1858#issuecomment-591198675
+	// for more details
+	if namespace != "" {
+		addMetrics(ctx, cfg, namespace)
+	}
 
 	log.Info("Starting the Cmd.")
 
