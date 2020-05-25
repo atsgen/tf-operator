@@ -184,11 +184,6 @@ type ReconcileTungstenCNI struct {
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
 func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	if request.Name != TF_OPERATOR_CONFIG {
-		log.Info("Error!!! Ignoring tf-operator " + request.Name)
-		return reconcile.Result{}, nil
-	}
-
 	reqLogger := log.WithValues("Request.Namespace", request.Namespace, "Request.Name", request.Name)
 	reqLogger.Info("Reconciling TungstenCNI")
 
@@ -206,42 +201,27 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, err
 	}
 
-	//_ = FetchNodeList(r.client)
-	r.renderTungstenFabricCNI(instance)
-/*
-	nodes := &corev1.NodeList{}
-	err = r.client.List(context.TODO(), nodes)
-	if err != nil {
-		reqLogger.Info("Prabhjot: failed reading nodes")
-	} else {
-		for ix := range nodes.Items {
-			node := nodes.Items[ix]
-			newNode := node.DeepCopy()
-			reqLogger.Info("Prabhjot found node: " + node.Name)
-			addresses := node.Status.Addresses
-			for _, address := range addresses {
-				if address.Type == corev1.NodeInternalIP {
-					reqLogger.Info("Prabhjot IP: " + address.Address)
-				}
-			}
-			newLabels := map[string]string{}
-			labels := node.GetLabels()
-			for key, element := range labels {
-				reqLogger.Info("Prabhjot label: " + key + ", value: " + element)
-				if !strings.Contains(key, "opencontrail") {
-					newLabels[key] = element
-				}
-			}
-			newNode.SetLabels(newLabels)
-			err = r.client.Update(context.TODO(), newNode)
-			if err != nil {
-				reqLogger.Info("Prabhjot: failed to update node labels ")
-			}
-		}
+	s,d := Validate(instance)
+	if s == TF_OPERATOR_OBJECT_IGNORED {
+		log.Info("Error!!! Ignoring tf-operator " + request.Name)
+		r.updateStatus(instance, s, d)
+		return reconcile.Result{}, nil
 	}
-*/
 
+	r.renderTungstenFabricCNI(instance)
+
+	r.updateStatus(instance, s, d)
 	log.Info("reconcile completed: Tungsten CNI " + instance.Name + " Updated")
 	return reconcile.Result{}, nil
 }
 
+func (r *ReconcileTungstenCNI) updateStatus(cr *tungstenv1alpha1.TungstenCNI, state string, msg string) error {
+	cr.Status.State = state
+	cr.Status.Error = msg
+	err := r.client.Status().Update(context.TODO(), cr)
+	if err != nil {
+		log.Error(err, "failed to update TungstenCNI status")
+		return err
+	}
+	return nil
+}

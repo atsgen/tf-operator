@@ -1,6 +1,12 @@
 package tungstencni
 
 const (
+	// Operator object state
+	TF_OPERATOR_OBJECT_IGNORED         = "Not-Ready"
+	TF_OPERATOR_OBJECT_DEPLOYED        = "Deployed"
+	TF_OPERATOR_OBJECT_NOT_SUPPORTED   = "Not-Supported"
+
+	// node roles
 	NODE_ROLE_VPP              = "node-role.tungsten.io/vpp"
 	NODE_ROLE_VROUTER          = "node-role.tungsten.io/agent"
 	NODE_ROLE_ANALYTICS        = "node-role.tungsten.io/analytics"

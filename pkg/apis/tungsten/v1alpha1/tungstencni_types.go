@@ -18,7 +18,9 @@ type TungstenCNISpec struct {
 
 // TungstenCNIStatus defines the observed state of TungstenCNI
 type TungstenCNIStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
+	// state of deployment
+	State string `json:"state,omitempty"`
+	Error string `json:"error,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -27,6 +29,7 @@ type TungstenCNIStatus struct {
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=tungstencnis,scope=Cluster
 // +kubebuilder:printcolumn:name="Release",type=string,JSONPath=`.spec.releasetag`
+// +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type TungstenCNI struct {
 	metav1.TypeMeta   `json:",inline"`

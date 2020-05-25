@@ -7,6 +7,9 @@ spec:
   - JSONPath: .spec.releasetag
     name: Release
     type: string
+  - JSONPath: .status.state
+    name: State
+    type: string
   - JSONPath: .metadata.creationTimestamp
     name: Age
     type: date
@@ -49,6 +52,12 @@ spec:
           type: object
         status:
           description: TungstenCNIStatus defines the observed state of TungstenCNI
+          properties:
+            error:
+              type: string
+            state:
+              description: state of deployment
+              type: string
           type: object
       type: object
   version: v1alpha1
