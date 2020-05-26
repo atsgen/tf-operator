@@ -23,6 +23,13 @@ spec:
           - tf-operator
           imagePullPolicy: IfNotPresent
           env:
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tungsten-auth
+                  key: password
+            - name: K8S_PROVIDER
+              value: "OpenShift"
             - name: WATCH_NAMESPACE
               value: ""
             - name: POD_NAME

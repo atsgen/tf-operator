@@ -20,6 +20,7 @@ import (
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"github.com/atsgen/tf-operator/pkg/apply"
 	"github.com/atsgen/tf-operator/pkg/render"
+	"github.com/atsgen/tf-operator/pkg/utils"
 )
 
 var log = logf.Log.WithName("controller_tungstencni")
@@ -72,7 +73,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data := render.MakeRenderData()
 	data.Data["TF_NAMESPACE"] = TF_NAMESPACE
 	data.Data["AAA_MODE"] = "no-auth"
-	data.Data["ADMIN_PASSWORD"] = "atsgen"
+	data.Data["ADMIN_PASSWORD"] = utils.GetAdminPassword()
 	data.Data["ANALYTICS_ALARM_NODES"] = nodes.MasterNodesStr
 	data.Data["ANALYTICS_API_VIP"] = ""
 	data.Data["ANALYTICSDB_NODES"] = nodes.MasterNodesStr

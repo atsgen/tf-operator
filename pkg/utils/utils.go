@@ -19,3 +19,11 @@ func IsOpenShiftCluster() bool {
 	}
 	return false
 }
+
+func GetAdminPassword() string {
+	password, found := os.LookupEnv(AdminPasswordEnvVar)
+	if !found {
+		return DefaultAdminPassword
+	}
+	return password
+}
