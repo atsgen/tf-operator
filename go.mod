@@ -3,7 +3,11 @@ module github.com/atsgen/tf-operator
 go 1.13
 
 require (
+	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/onsi/gomega v1.7.0
+	github.com/openshift/api v3.9.1-0.20190924102528-32369d4db2ad+incompatible
 	github.com/operator-framework/operator-sdk v0.15.2
+	github.com/pkg/errors v0.8.1
 	github.com/spf13/pflag v1.0.5
 	k8s.io/api v0.0.0
 	k8s.io/apimachinery v0.0.0
