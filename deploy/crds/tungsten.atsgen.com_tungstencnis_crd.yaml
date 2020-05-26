@@ -41,9 +41,23 @@ spec:
         spec:
           description: Define the desired TungstenCNI deployment parameters
           properties:
+            podNetwork:
+              description: pod network parameters
+              properties:
+                cidr:
+                  description: pod network CIDR
+                  type: string
+              type: object
             releasetag:
               description: release tag for the container images used
               type: string
+            serviceNetwork:
+              description: service network parameters
+              properties:
+                cidr:
+                  description: service network CIDR
+                  type: string
+              type: object
             usevrouter:
               description: use vrouter as datpath for CNI
               type: boolean

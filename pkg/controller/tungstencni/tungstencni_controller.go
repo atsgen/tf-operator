@@ -105,6 +105,8 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data.Data["ZOOKEEPER_PORT"] = "2181"
 	data.Data["ZOOKEEPER_PORTS"] = "2888:3888"
 	data.Data["DPDK_UIO_DRIVER"] = "igb_uio"
+	data.Data["KUBERNETES_POD_SUBNETS"] = cr.Spec.PodNetwork.Cidr
+	data.Data["KUBERNETES_SERVICE_SUBNETS"] = cr.Spec.ServiceNetwork.Cidr
 
 	manifests, err := render.RenderDir(filepath.Join("/bindata", "network/tungsten/"), &data)
 	if err != nil {

@@ -8,12 +8,28 @@ import (
 // Important: Run "operator-sdk generate k8s" to regenerate code after modifying this file
 // Add custom validation using kubebuilder tags: https://book-v1.book.kubebuilder.io/beyond_basics/generating_crd.html
 
+// Define PodNetwork parameters for Tugnsten Fabric
+type PodNetworkType struct {
+	// pod network CIDR
+	Cidr string `json:"cidr,omitempty"`
+}
+
+// Define ServiceNetwork parameters for Tugnsten Fabric
+type ServiceNetworkType struct {
+	// service network CIDR
+	Cidr string `json:"cidr,omitempty"`
+}
+
 // Define the desired TungstenCNI deployment parameters
 type TungstenCNISpec struct {
 	// release tag for the container images used
 	ReleaseTag string `json:"releasetag"`
 	// use vrouter as datpath for CNI
 	UseVrouter bool   `json:"usevrouter,omitempty"`
+	// pod network parameters
+	PodNetwork PodNetworkType `json:"podNetwork,omitempty"`
+	// service network parameters
+	ServiceNetwork ServiceNetworkType `json:"serviceNetwork,omitempty"`
 }
 
 // TungstenCNIStatus defines the observed state of TungstenCNI
