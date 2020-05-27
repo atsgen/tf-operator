@@ -48,7 +48,7 @@ spec:
                   description: pod network CIDR
                   type: string
               type: object
-            releasetag:
+            releaseTag:
               description: release tag for the container images used
               type: string
             serviceNetwork:
@@ -58,11 +58,11 @@ spec:
                   description: service network CIDR
                   type: string
               type: object
-            usevrouter:
+            useVrouter:
               description: use vrouter as datpath for CNI
               type: boolean
           required:
-          - releasetag
+          - releaseTag
           type: object
         status:
           description: TungstenCNIStatus defines the observed state of TungstenCNI

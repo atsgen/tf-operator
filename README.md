@@ -1,4 +1,5 @@
 # tf-operator
+tf-operator is project based on operator-sdk, to manage rollout, upgrades and lifecyle management of Tungsten Fabric CNI
 ## Operator-SDK setup
 There are multiple ways to setup the Operator SDK, while using we can as well download and use the available pre-compiled releases
 ```
@@ -22,8 +23,28 @@ This can also be setup using:
 scripts/initial-setup.sh
 ```
 
+## Operator-SDK usage
+operator-sdk can be used to add a new api to tf-operator
+```
+operator-sdk add api --api-version=tungsten.atsgen.com/v1alpha1 --kind TungstenCNI
+```
+Trigger following to regenerate k8s and crds after modification of any structure of introduced apis
+```
+operator-sdk generate k8s
+operator-sdk generate crds
+```
+operator-sdk can be used to add a new api to tf-operator
+```
+operator-sdk add controller --api-version=tungsten.atsgen.com/v1alpha1 --kind=TungstenCNI
+```
+
 ## Generate Operator image
-you can build the tf-helm operator image using following command
+you can build the tf operator image using following command
+```
+# expects golang to be available
+make
+```
+alternatively operator-sdk can also build the base alpine image using below command
 ```
 # assumed to be executed from within the top level of repo
 operator-sdk build atsgen/tf-operator:v0.0.1

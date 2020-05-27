@@ -23,9 +23,9 @@ type ServiceNetworkType struct {
 // Define the desired TungstenCNI deployment parameters
 type TungstenCNISpec struct {
 	// release tag for the container images used
-	ReleaseTag string `json:"releasetag"`
+	ReleaseTag string `json:"releaseTag"`
 	// use vrouter as datpath for CNI
-	UseVrouter bool   `json:"usevrouter,omitempty"`
+	UseVrouter bool   `json:"useVrouter,omitempty"`
 	// pod network parameters
 	PodNetwork PodNetworkType `json:"podNetwork,omitempty"`
 	// service network parameters
