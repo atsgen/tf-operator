@@ -4,3 +4,7 @@ metadata:
   name: atsgen
   labels:
     name: atsgen
+    openshift.io/run-level: "0"
+  annotations:
+    openshift.io/node-selector: ""
+    openshift.io/description: "ATSgen Tungsten Fabric Operator components"

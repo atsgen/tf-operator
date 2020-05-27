@@ -12,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
@@ -124,11 +123,6 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 		reqLogger.Info("Creating a new Tungsten CNI", "Name", values.TF_OPERATOR_CONFIG)
 		// Define a new Tungsten CNI object
 		cni := newTungstenCNI(instance)
-
-		// Set Network instance as the owner and controller
-		if err := controllerutil.SetControllerReference(instance, cni, r.scheme); err != nil {
-			return reconcile.Result{}, err
-		}
 
 		err = r.client.Create(context.TODO(), cni)
 		if err != nil {

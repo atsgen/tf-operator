@@ -1,7 +1,7 @@
 apiVersion: tungsten.atsgen.com/v1alpha1
 kind: TungstenCNI
 metadata:
-  name: cluster
+  name: default
 spec:
-  releasetag: R2003-latest
-  usevrouter: true
+  releaseTag: R2003-latest
+  useVrouter: true

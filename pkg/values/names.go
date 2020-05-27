@@ -1,7 +1,7 @@
 package values
 
 const (
-	TF_OPERATOR_CONFIG     = "cluster"
+	TF_OPERATOR_CONFIG     = "default"
 	TF_NAMESPACE           = "tungsten"
 	TF_RELEASE_TAG         = "R2003-latest"
 

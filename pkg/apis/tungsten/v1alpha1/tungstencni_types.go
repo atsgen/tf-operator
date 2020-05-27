@@ -44,7 +44,7 @@ type TungstenCNIStatus struct {
 // TungstenCNI is the Schema for the tungstencnis API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=tungstencnis,scope=Cluster
-// +kubebuilder:printcolumn:name="Release",type=string,JSONPath=`.spec.releasetag`
+// +kubebuilder:printcolumn:name="Release",type=string,JSONPath=`.spec.releaseTag`
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type TungstenCNI struct {

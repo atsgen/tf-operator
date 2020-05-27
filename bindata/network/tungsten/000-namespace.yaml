@@ -4,4 +4,7 @@ metadata:
   name: {{ .TF_NAMESPACE }}
   labels:
     name: {{ .TF_NAMESPACE }}
-
+    openshift.io/run-level: "0"
+  annotations:
+    openshift.io/node-selector: ""
+    openshift.io/description: "Tungsten Fabric components"

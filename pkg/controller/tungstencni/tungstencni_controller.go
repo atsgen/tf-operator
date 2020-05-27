@@ -21,6 +21,7 @@ import (
 	"github.com/atsgen/tf-operator/pkg/apply"
 	"github.com/atsgen/tf-operator/pkg/render"
 	"github.com/atsgen/tf-operator/pkg/utils"
+	"github.com/atsgen/tf-operator/pkg/values"
 )
 
 var log = logf.Log.WithName("controller_tungstencni")
@@ -71,7 +72,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	}
 
 	data := render.MakeRenderData()
-	data.Data["TF_NAMESPACE"] = TF_NAMESPACE
+	data.Data["TF_NAMESPACE"] = values.TF_NAMESPACE
 	data.Data["AAA_MODE"] = "no-auth"
 	data.Data["ADMIN_PASSWORD"] = utils.GetAdminPassword()
 	data.Data["ANALYTICS_ALARM_NODES"] = nodes.MasterNodesStr

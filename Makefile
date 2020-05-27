@@ -9,7 +9,7 @@ SHELL=/bin/bash -o pipefail
 OUT_DIR := $(abspath $(SB_TOP)/build/_output/)
 OPERATOR_BIN := $(abspath $(SB_TOP)/build/_output/bin/tf-operator)
 
-OPERATOR_VERSION := "v0.0.1"
+OPERATOR_VERSION := v0.0.1
 
 CGO_OPT := "CGO_ENABLED=0"
 GIT_REPO := "github.com/atsgen/tf-operator/"

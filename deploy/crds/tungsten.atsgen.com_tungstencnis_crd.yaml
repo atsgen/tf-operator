@@ -4,7 +4,7 @@ metadata:
   name: tungstencnis.tungsten.atsgen.com
 spec:
   additionalPrinterColumns:
-  - JSONPath: .spec.releasetag
+  - JSONPath: .spec.releaseTag
     name: Release
     type: string
   - JSONPath: .status.state

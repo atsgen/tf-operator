@@ -4,11 +4,12 @@ import (
 	"strings"
 
 	tungstenv1alpha1 "github.com/atsgen/tf-operator/pkg/apis/tungsten/v1alpha1"
+	"github.com/atsgen/tf-operator/pkg/values"
 )
 
 func Validate(cr *tungstenv1alpha1.TungstenCNI) (state string, description string) {
-	if cr.Name != TF_OPERATOR_CONFIG {
-		return TF_OPERATOR_OBJECT_IGNORED, ("Tungsten CNI other than name: " + TF_OPERATOR_CONFIG + ", are not processed")
+	if cr.Name != values.TF_OPERATOR_CONFIG {
+		return TF_OPERATOR_OBJECT_IGNORED, ("Tungsten CNI other than name: " + values.TF_OPERATOR_CONFIG + ", are not processed")
 	}
 
 	s := TF_OPERATOR_OBJECT_NOT_SUPPORTED
