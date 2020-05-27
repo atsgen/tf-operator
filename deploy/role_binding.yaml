@@ -5,7 +5,7 @@ metadata:
 subjects:
 - kind: ServiceAccount
   name: tf-operator
-  namespace: ats-tf-operator
+  namespace: atsgen
 roleRef:
   kind: ClusterRole
   name: tf-operator
