@@ -212,7 +212,11 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, nil
 	}
 
-	r.renderTungstenFabricCNI(instance)
+	err = r.renderTungstenFabricCNI(instance)
+	if err != nil {
+		log.Error(err, "failed to reconcile")
+		return reconcile.Result{}, err
+	}
 
 	r.updateStatus(instance, s, d)
 	log.Info("reconcile completed: Tungsten CNI " + instance.Name + " Updated")
@@ -220,6 +224,10 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 }
 
 func (r *ReconcileTungstenCNI) updateStatus(cr *tungstenv1alpha1.TungstenCNI, state string, msg string) error {
+        if (cr.Status.State == state && cr.Status.Error == msg) {
+		// No update required
+		return nil
+	}
 	cr.Status.State = state
 	cr.Status.Error = msg
 	err := r.client.Status().Update(context.TODO(), cr)
