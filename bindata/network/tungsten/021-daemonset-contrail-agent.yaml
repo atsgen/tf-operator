@@ -32,6 +32,7 @@ spec:
         effect: NoSchedule
       automountServiceAccountToken: false
       hostNetwork: true
+      shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
         image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
@@ -63,7 +64,7 @@ spec:
         - mountPath: /etc/sysconfig/network-scripts
           name: network-scripts
         - mountPath: /host/bin
-          name: host-bin
+          name: host-usr-bin
       - name: tungsten-kubernetes-cni-init
         image: "{{ .CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{ .CONTRAIL_CONTAINER_TAG}}"
         imagePullPolicy: ""
@@ -104,7 +105,7 @@ spec:
         - mountPath: /etc/sysconfig/network-scripts
           name: network-scripts
         - mountPath: /host/bin
-          name: host-bin
+          name: host-usr-bin
         - mountPath: /var/log/contrail
           name: agent-logs
         - mountPath: /usr/src
@@ -136,6 +137,8 @@ spec:
         volumeMounts:
         - mountPath: /var/log/contrail
           name: agent-logs
+        - mountPath: /var/crashes
+          name: var-crashes
         - mountPath: /mnt
           name: docker-unix-socket
       - name: tungsten-agent-provisioner
@@ -163,9 +166,6 @@ spec:
       - name: network-scripts
         hostPath:
           path: /etc/sysconfig/network-scripts
-      - name: host-bin
-        hostPath:
-          path: /bin
       - name: docker-unix-socket
         hostPath:
           path: /var/run
@@ -198,6 +198,6 @@ spec:
           path: /var/log/contrail/agent
       - name: host-usr-bin
         hostPath:
-          path: /usr/bin
+          path: /opt/tungsten/bin
 
 # Meta information section

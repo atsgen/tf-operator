@@ -68,4 +68,4 @@ spec:
           path: /var/log/contrail/webui
       - name: host-usr-bin
         hostPath:
-          path: /usr/bin
+          path: /opt/tungsten/bin

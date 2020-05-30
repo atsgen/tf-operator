@@ -70,4 +70,4 @@ spec:
           secretName: tungsten-kube-manager-token
       - name: host-usr-bin
         hostPath:
-          path: /usr/bin
+          path: /opt/tungsten/bin

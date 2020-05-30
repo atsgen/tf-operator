@@ -32,7 +32,7 @@ spec:
         effect: NoSchedule
       automountServiceAccountToken: false
       hostNetwork: true
-      hostPID: true
+      shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
         image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
@@ -239,7 +239,7 @@ spec:
           path: /var/log/contrail/agent
       - name: host-usr-bin
         hostPath:
-          path: /usr/bin
+          path: /opt/tungsten/bin
       - name: hugepages-medium
         emptyDir:
           medium: HugePages

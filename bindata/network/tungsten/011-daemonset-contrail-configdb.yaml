@@ -21,6 +21,7 @@ spec:
             - matchExpressions:
               - key: "node-role.tungsten.io/configdb"
                 operator: Exists
+      shareProcessNamespace: true
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
@@ -100,4 +101,4 @@ spec:
           path: /var/run
       - name: host-usr-bin
         hostPath:
-          path: /usr/bin
+          path: /opt/tungsten/bin
