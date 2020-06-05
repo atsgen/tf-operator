@@ -55,9 +55,7 @@ initialise and run tf-operator
 ```
 # assumed to be executed from within the top level of repo
 kubectl create -f deploy/namespace.yaml
-kubectl create -f deploy/service_account.yaml
-kubectl create -f deploy/role.yaml
-kubectl create -f deploy/role_binding.yaml
+kubectl create -f deploy/rbac.yaml
 kubectl create -f deploy/crds/tungsten.atsgen.com_tungstencnis_crd.yaml
 # default password set as 'atsgen'
 # user can choose to skip creating secret from here and define
