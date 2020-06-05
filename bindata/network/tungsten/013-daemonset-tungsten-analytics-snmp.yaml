@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: tungsten-analytics-alarm
+  name: tungsten-analytics-snmp
   namespace: {{ .TF_NAMESPACE }}
   labels:
-    app: tungsten-analytics-alarm
+    app: tungsten-analytics-snmp
 spec:
   selector:
     matchLabels:
-      app: tungsten-analytics-alarm
+      app: tungsten-analytics-snmp
   template:
     metadata:
       labels:
-        app: tungsten-analytics-alarm
+        app: tungsten-analytics-snmp
     spec:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.tungsten.io/analytics_alarm"
+              - key: "node-role.tungsten.io/analytics_snmp"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -29,13 +29,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
-          value: "analytics-alarm"
+          value: "analytics-snmp"
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -49,59 +49,56 @@ spec:
         - mountPath: /host/var/lib
           name: host-var-lib
       containers:
-      - name: kafka
-        image: "{{ .CONTRAIL_REGISTRY }}/contrail-external-kafka:{{ .CONTRAIL_CONTAINER_TAG }}"
-        imagePullPolicy: "IfNotPresent"
-        securityContext:
-          privileged: true
-        env:
-        - name: NODE_TYPE
-          value: analytics-alarm
-        - name: KAFKA_NODES
-          value: {{ .KAFKA_NODES}}
-        envFrom:
-        - configMapRef:
-            name: env
-        - configMapRef:
-            name: configzookeeperenv
-      - name: tungsten-analytics-alarm-gen
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-analytics-alarm-gen:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-snmp-collector
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-snmp-collector:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         envFrom:
         - configMapRef:
             name: env
-        - configMapRef:
-            name: configzookeeperenv
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: analytics-alarm-logs
+          name: analytics-snmp-logs
         env:
         - name: NODE_TYPE
-          value: analytics-alarm
-      - name: tungsten-analytics-alarm-nodemgr
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
+          value: analytics-snmp
+      - name: tungsten-analytics-snmp-topology
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-snmp-topology:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         envFrom:
         - configMapRef:
             name: env
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-snmp-logs
+        env:
+        - name: NODE_TYPE
+          value: analytics-snmp
+      - name: tungsten-analytics-snmp-nodemgr
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
+        imagePullPolicy: ""
+        securityContext:
+          privileged: true
+        envFrom:
         - configMapRef:
-            name: tungsten-analyticsdb-config
+            name: env
         - configMapRef:
             name: nodemgr-config
+        - configMapRef:
+            name: tungsten-analyticsdb-config
         env:
         - name: NODE_TYPE
-          value: analytics-alarm
+          value: analytics-snmp
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: analytics-alarm-logs
+          name: analytics-snmp-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: tungsten-analytics-alarm-provisioner
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-snmp-provisioner
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -111,21 +108,21 @@ spec:
         - configMapRef:
             name: defaults-env
         - configMapRef:
-            name: tungsten-analyticsdb-config
-        - configMapRef:
             name: nodemgr-config
+        - configMapRef:
+            name: tungsten-analyticsdb-config
         env:
         - name: NODE_TYPE
-          value: analytics-alarm
+          value: analytics-snmp
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: analytics-alarm-logs
+          name: analytics-snmp-logs
       imagePullSecrets:
-      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
-      - name: analytics-alarm-logs
+      - name: analytics-snmp-logs
         hostPath:
-          path: /var/log/contrail/analytics-alarm
+          path: /var/log/contrail/analytics-snmp
       - name: host-var-lib
         hostPath:
           path: /var/lib

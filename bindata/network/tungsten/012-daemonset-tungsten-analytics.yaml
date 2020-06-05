@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: tungsten-controller-control
+  name: tungsten-analytics
   namespace: {{ .TF_NAMESPACE }}
   labels:
-    app: tungsten-controller-control
+    app: tungsten-analytics
 spec:
   selector:
     matchLabels:
-      app: tungsten-controller-control
+      app: tungsten-analytics
   template:
     metadata:
       labels:
-        app: tungsten-controller-control
+        app: tungsten-analytics
     spec:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.tungsten.io/control"
+              - key: "node-role.tungsten.io/analytics"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -29,13 +29,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -43,41 +43,28 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       containers:
-      - name: tungsten-controller-control
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-control-control:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-api
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-api:{{ .CONTAINER_TAG }}"
+        imagePullPolicy: ""
+        envFrom:
+        - configMapRef:
+            name: env
+        - configMapRef:
+            name: configzookeeperenv
+        volumeMounts:
+        - mountPath: /var/log/contrail
+          name: analytics-logs
+      - name: tungsten-analytics-collector
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-collector:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
             name: env
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: control-logs
-      - name: tungsten-controller-control-dns
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-control-dns:{{ .CONTRAIL_CONTAINER_TAG}}"
-        imagePullPolicy: ""
-        envFrom:
-        - configMapRef:
-            name: env
-        volumeMounts:
-        - mountPath: /etc/contrail
-          name: dns-config
-        - mountPath: /var/log/contrail
-          name: control-logs
-      - name: tungsten-controller-control-named
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-control-named:{{ .CONTRAIL_CONTAINER_TAG}}"
-        imagePullPolicy: ""
-        envFrom:
-        - configMapRef:
-            name: env
-        securityContext:
-          privileged: true
-        volumeMounts:
-        - mountPath: /etc/contrail
-          name: dns-config
-        - mountPath: /var/log/contrail
-          name: control-logs
-      - name: tungsten-controller-nodemgr
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
+          name: analytics-logs
+      - name: tungsten-analytics-nodemgr
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -88,7 +75,7 @@ spec:
             name: nodemgr-config
         env:
         - name: NODE_TYPE
-          value: control
+          value: analytics
 # todo: there is type Socket in new kubernetes, it is possible to use full
 # path:
 # hostPath:
@@ -96,11 +83,11 @@ spec:
 #   type: Socket
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: control-logs
+          name: analytics-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: tungsten-controller-provisioner
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-analytics-provisioner
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -113,21 +100,19 @@ spec:
             name: nodemgr-config
         env:
         - name: NODE_TYPE
-          value: control
+          value: analytics
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: control-logs
+          name: analytics-logs
       imagePullSecrets:
-      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
-      - name: control-logs
+      - name: analytics-logs
         hostPath:
-          path: /var/log/contrail/control
+          path: /var/log/contrail/analytics
       - name: docker-unix-socket
         hostPath:
           path: /var/run
-      - name: dns-config
-        emptyDir: {}
       - name: host-usr-bin
         hostPath:
           path: /opt/tungsten/bin

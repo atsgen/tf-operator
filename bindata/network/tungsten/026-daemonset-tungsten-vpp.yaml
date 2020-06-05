@@ -4,15 +4,15 @@ metadata:
   name: tungsten-vpp
   namespace: {{ .TF_NAMESPACE }}
   labels:
-    app: tungsten-agent
+    app: tungsten-vpp
 spec:
   selector:
     matchLabels:
-      app: tungsten-agent
+      app: tungsten-vpp
   template:
     metadata:
       labels:
-        app: tungsten-agent
+        app: tungsten-vpp
     spec:
       #Disable affinity for single node setup
       affinity:
@@ -35,13 +35,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -49,7 +49,7 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       - name: tungsten-vpp-init
-        image: "{{ .CONTRAIL_REGISTRY}}/tungsten-vpp-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/tungsten-vpp-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -66,7 +66,7 @@ spec:
         - mountPath: /host/bin
           name: host-bin
       - name: tungsten-kubernetes-cni-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-kubernetes-cni-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -84,7 +84,7 @@ spec:
           name: agent-logs
       containers:
       - name: tungsten-vpp-agent
-        image: "{{ .CONTRAIL_REGISTRY}}/tungsten-vpp-agent:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/tungsten-vpp-agent:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
         # is not present in the container. The mounting it into container
@@ -115,7 +115,7 @@ spec:
         - mountPath: /tmp/serviceaccount
           name: pod-secret
       - name: tungsten-vpp-nodemgr
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -136,7 +136,7 @@ spec:
         - mountPath: /mnt
           name: docker-unix-socket
       - name: tungsten-vpp-datapath
-        image: "{{ .CONTRAIL_REGISTRY}}/tungsten-vpp-datapath:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/tungsten-vpp-datapath:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
         # is not present in the container. The mounting it into container
@@ -177,7 +177,7 @@ spec:
         - mountPath: /dev/hugepages
           name: hugepages-medium
       - name: tungsten-vpp-provisioner
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -193,7 +193,7 @@ spec:
         - mountPath: /var/log/contrail
           name: agent-logs
       imagePullSecrets:
-      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
       - name: dev
         hostPath:

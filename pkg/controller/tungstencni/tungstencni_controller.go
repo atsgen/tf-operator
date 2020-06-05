@@ -85,8 +85,8 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data.Data["CONFIG_API_VIP"] = ""
 	data.Data["CONFIGDB_NODES"] = nodes.MasterNodesStr
 	data.Data["CONFIG_NODES"] = nodes.MasterNodesStr
-	data.Data["CONTRAIL_REGISTRY"] = "atsgen"
-	data.Data["CONTRAIL_CONTAINER_TAG"] = cr.Spec.ReleaseTag
+	data.Data["CONTAINER_REGISTRY"] = "atsgen"
+	data.Data["CONTAINER_TAG"] = cr.Spec.ReleaseTag
 	data.Data["VROUTER_KERNEL_INIT_IMAGE"] = "contrail-vrouter-kernel-init"
 	data.Data["CONTROLLER_NODES"] = nodes.MasterNodesStr
 	data.Data["CONTROL_NODES"] = nodes.MasterNodesStr
@@ -95,7 +95,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data.Data["KUBERNETES_API_SECURE_PORT"] = "6443"
 	data.Data["KUBERNETES_API_SERVER"] = nodes.MasterNodesStr
 	data.Data["KUBERNETES_PUBLIC_FIP_POOL"] = ""
-	data.Data["KUBERNETES_SECRET_CONTRAIL_REPO"] = ""
+	data.Data["TUNGSTEN_IMAGE_PULL_SECRET"] = ""
 	data.Data["LOG_LEVEL"] = "SYS_NOTICE"
 	data.Data["METADATA_PROXY_SECRET"] = "tungsten"
 	data.Data["PHYSICAL_INTERFACE"] = ""

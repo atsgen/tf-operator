@@ -1,25 +1,25 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: tungsten-controller-config
+  name: tungsten-controller-control
   namespace: {{ .TF_NAMESPACE }}
   labels:
-    app: tungsten-controller-config
+    app: tungsten-controller-control
 spec:
   selector:
     matchLabels:
-      app: tungsten-controller-config
+      app: tungsten-controller-control
   template:
     metadata:
       labels:
-        app: tungsten-controller-config
+        app: tungsten-controller-control
     spec:
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.tungsten.io/config"
+              - key: "node-role.tungsten.io/control"
                 operator: Exists
       tolerations:
       - key: node-role.kubernetes.io/master
@@ -29,13 +29,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -43,52 +43,41 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       containers:
-      - name: tungsten-controller-config-api
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-config-api:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-controller-control
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-controller-control-control:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
             name: env
-        - configMapRef:
-            name: configzookeeperenv
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: config-logs
-      - name: tungsten-controller-config-devicemgr
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-config-devicemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
+          name: control-logs
+      - name: tungsten-controller-control-dns
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-controller-control-dns:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
             name: env
-        - configMapRef:
-            name: configzookeeperenv
         volumeMounts:
+        - mountPath: /etc/contrail
+          name: dns-config
         - mountPath: /var/log/contrail
-          name: config-logs
-      - name: tungsten-controller-config-schema
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-config-schema:{{ .CONTRAIL_CONTAINER_TAG}}"
+          name: control-logs
+      - name: tungsten-controller-control-named
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-controller-control-named:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
             name: env
-        - configMapRef:
-            name: configzookeeperenv
+        securityContext:
+          privileged: true
         volumeMounts:
+        - mountPath: /etc/contrail
+          name: dns-config
         - mountPath: /var/log/contrail
-          name: config-logs
-      - name: tungsten-controller-config-svcmonitor
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-controller-config-svcmonitor:{{ .CONTRAIL_CONTAINER_TAG}}"
-        imagePullPolicy: ""
-        envFrom:
-        - configMapRef:
-            name: env
-        - configMapRef:
-            name: configzookeeperenv
-        volumeMounts:
-        - mountPath: /var/log/contrail
-          name: config-logs
-      - name: tungsten-controller-config-nodemgr
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
+          name: control-logs
+      - name: tungsten-controller-nodemgr
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -99,13 +88,7 @@ spec:
             name: nodemgr-config
         env:
         - name: NODE_TYPE
-          value: config
-        - name: CASSANDRA_CQL_PORT
-          value: "9041"
-        - name: CASSANDRA_JMX_LOCAL_PORT
-          value: "7201"
-        - name: CONFIG_NODEMGR__DEFAULTS__minimum_diskGB
-          value: "2"
+          value: control
 # todo: there is type Socket in new kubernetes, it is possible to use full
 # path:
 # hostPath:
@@ -113,11 +96,11 @@ spec:
 #   type: Socket
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: config-logs
+          name: control-logs
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: tungsten-controller-config-provisioner
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-controller-provisioner
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -130,21 +113,21 @@ spec:
             name: nodemgr-config
         env:
         - name: NODE_TYPE
-          value: config
-        - name: CONFIG_NODEMGR__DEFAULTS__minimum_diskGB
-          value: "2"
+          value: control
         volumeMounts:
         - mountPath: /var/log/contrail
-          name: config-logs
+          name: control-logs
       imagePullSecrets:
-      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
-      - name: config-logs
+      - name: control-logs
         hostPath:
-          path: /var/log/contrail/config
+          path: /var/log/contrail/control
       - name: docker-unix-socket
         hostPath:
           path: /var/run
+      - name: dns-config
+        emptyDir: {}
       - name: host-usr-bin
         hostPath:
           path: /opt/tungsten/bin

@@ -32,13 +32,13 @@ spec:
       hostNetwork: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -47,7 +47,7 @@ spec:
           name: host-usr-bin
       containers:
       - name: tungsten-kube-manager
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-kubernetes-kube-manager:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-kubernetes-kube-manager:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -60,7 +60,7 @@ spec:
         - mountPath: /tmp/serviceaccount
           name: pod-secret
       imagePullSecrets:
-      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
       - name: kube-manager-logs
         hostPath:

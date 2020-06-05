@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: tungsten-agent
+  name: tungsten-vrouter
   namespace: {{ .TF_NAMESPACE }}
   labels:
-    app: tungsten-agent
+    app: tungsten-vrouter
 spec:
   selector:
     matchLabels:
-      app: tungsten-agent
+      app: tungsten-vrouter
   template:
     metadata:
       labels:
-        app: tungsten-agent
+        app: tungsten-vrouter
     spec:
       #Disable affinity for single node setup
       affinity:
@@ -35,13 +35,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-node-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTRAIL_REGISTRY}}/contrail-status:{{ .CONTRAIL_CONTAINER_TAG}}"
+          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -49,7 +49,7 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       - name: tungsten-vrouter-kernel-init
-        image: "{{ .CONTRAIL_REGISTRY}}/{{.VROUTER_KERNEL_INIT_IMAGE}}:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{.VROUTER_KERNEL_INIT_IMAGE}}:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -66,7 +66,7 @@ spec:
         - mountPath: /host/bin
           name: host-usr-bin
       - name: tungsten-kubernetes-cni-init
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-kubernetes-cni-init:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-kubernetes-cni-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -84,7 +84,7 @@ spec:
           name: agent-logs
       containers:
       - name: tungsten-vrouter-agent
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-vrouter-agent:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-vrouter-agent:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         # TODO: Priveleged mode is requied because w/o it the device /dev/net/tun
         # is not present in the container. The mounting it into container
@@ -118,8 +118,8 @@ spec:
           name: var-crashes
         - mountPath: /tmp/serviceaccount
           name: pod-secret
-      - name: tungsten-agent-nodemgr
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-nodemgr:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-vrouter-nodemgr
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -141,8 +141,8 @@ spec:
           name: var-crashes
         - mountPath: /mnt
           name: docker-unix-socket
-      - name: tungsten-agent-provisioner
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-provisioner:{{ .CONTRAIL_CONTAINER_TAG}}"
+      - name: tungsten-vrouter-provisioner
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -158,7 +158,7 @@ spec:
         - mountPath: /var/log/contrail
           name: agent-logs
       imagePullSecrets:
-      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
       - name: dev
         hostPath:

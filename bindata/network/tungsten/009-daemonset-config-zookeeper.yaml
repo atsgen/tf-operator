@@ -28,7 +28,7 @@ spec:
       hostNetwork: true
       containers:
       - name: config-zookeeper
-        image: "{{ .CONTRAIL_REGISTRY}}/contrail-external-zookeeper:{{ .CONTRAIL_CONTAINER_TAG}}"
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-external-zookeeper:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
@@ -44,7 +44,7 @@ spec:
         - mountPath: /var/log/zookeeper
           name: zookeeper-logs
       imagePullSecrets:
-      - name: {{ .KUBERNETES_SECRET_CONTRAIL_REPO }}
+      - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
       - name: zookeeper-data
         hostPath:
