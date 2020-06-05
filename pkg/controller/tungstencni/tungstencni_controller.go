@@ -72,6 +72,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	}
 
 	data := render.MakeRenderData()
+	data.Data["K8S_PROVIDER"] = utils.GetKubernetesProvider()
 	data.Data["TF_NAMESPACE"] = values.TF_NAMESPACE
 	data.Data["AAA_MODE"] = "no-auth"
 	data.Data["ADMIN_PASSWORD"] = utils.GetAdminPassword()
@@ -87,7 +88,12 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data.Data["CONFIG_NODES"] = nodes.MasterNodesStr
 	data.Data["CONTAINER_REGISTRY"] = "atsgen"
 	data.Data["CONTAINER_TAG"] = cr.Spec.ReleaseTag
-	data.Data["VROUTER_KERNEL_INIT_IMAGE"] = "contrail-vrouter-kernel-init"
+	if utils.IsOpenShiftCluster() {
+		// we don't support building KMOD for openshift
+		data.Data["TUNGSTEN_KMOD"] = "init"
+	} else {
+		data.Data["TUNGSTEN_KMOD"] = "build"
+	}
 	data.Data["CONTROLLER_NODES"] = nodes.MasterNodesStr
 	data.Data["CONTROL_NODES"] = nodes.MasterNodesStr
 	data.Data["JVM_EXTRA_OPTS"] = "-Xms1g -Xmx2g"

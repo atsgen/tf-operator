@@ -30,7 +30,11 @@ spec:
       - key: node.kubernetes.io/not-ready
         operator: Exists
         effect: NoSchedule
+{{- if eq .K8S_PROVIDER "OpenShift"}}
+      serviceAccountName: tungsten-datapath
+{{- else}}
       automountServiceAccountToken: false
+{{- end}}
       hostNetwork: true
       shareProcessNamespace: true
       initContainers:
@@ -49,7 +53,11 @@ spec:
         - mountPath: /host/usr/bin
           name: host-usr-bin
       - name: tungsten-vrouter-kernel-init
-        image: "{{ .CONTAINER_REGISTRY }}/{{.VROUTER_KERNEL_INIT_IMAGE}}:{{ .CONTAINER_TAG }}"
+{{- if eq .TUNGSTEN_KMOD "build"}}
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-vrouter-kernel-build-init:{{ .CONTAINER_TAG }}"
+{{- else}}
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-vrouter-kernel-init:{{ .CONTAINER_TAG }}"
+{{- end}}
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -59,8 +67,15 @@ spec:
         volumeMounts:
         - mountPath: /usr/src
           name: usr-src
+{{- if eq .K8S_PROVIDER "OpenShift"}}
+        - mountPath: /host/modules
+          name: lib-modules
+        - mountPath: /tungsten/modules
+          name: tungsten-modules
+{{- else}}
         - mountPath: /lib/modules
           name: lib-modules
+{{- end}}
         - mountPath: /etc/sysconfig/network-scripts
           name: network-scripts
         - mountPath: /host/bin
@@ -110,8 +125,15 @@ spec:
           name: agent-logs
         - mountPath: /usr/src
           name: usr-src
+{{- if eq .K8S_PROVIDER "OpenShift"}}
+        - mountPath: /host/modules
+          name: lib-modules
+        - mountPath: /tungsten/modules
+          name: tungsten-modules
+{{- else}}
         - mountPath: /lib/modules
           name: lib-modules
+{{- end}}
         - mountPath: /var/lib/contrail
           name: var-lib-contrail
         - mountPath: /var/crashes
@@ -199,5 +221,9 @@ spec:
       - name: host-usr-bin
         hostPath:
           path: /opt/tungsten/bin
-
+{{- if eq .K8S_PROVIDER "OpenShift"}}
+      - name: tungsten-modules
+        hostPath:
+          path: /opt/tungsten/modules
+{{- end}}
 # Meta information section
