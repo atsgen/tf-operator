@@ -1,10 +1,3 @@
----
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: tf-operator
-  namespace: atsgen
----
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
@@ -105,16 +98,3 @@ rules:
   - '*'
   verbs:
   - '*'
----
-kind: ClusterRoleBinding
-apiVersion: rbac.authorization.k8s.io/v1
-metadata:
-  name: tf-operator
-subjects:
-- kind: ServiceAccount
-  name: tf-operator
-  namespace: atsgen
-roleRef:
-  kind: ClusterRole
-  name: tf-operator
-  apiGroup: rbac.authorization.k8s.io

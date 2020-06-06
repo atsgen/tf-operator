@@ -54,7 +54,7 @@ spec:
           name: host-usr-bin
       - name: tungsten-vrouter-kernel-init
 {{- if eq .TUNGSTEN_KMOD "build"}}
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-vrouter-kernel-build-init:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/tungsten-vrouter-kernel-build-init:{{ .CONTAINER_TAG }}"
 {{- else}}
         image: "{{ .CONTAINER_REGISTRY }}/contrail-vrouter-kernel-init:{{ .CONTAINER_TAG }}"
 {{- end}}

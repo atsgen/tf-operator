@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tf-operator
+  namespace: atsgen
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: tf-operator
+  template:
+    metadata:
+      labels:
+        name: tf-operator
+    spec:
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: tf-operator
+      containers:
+        - name: tf-operator
+          image: atsgen/tf-operator:v0.0.1
+          command:
+          - tf-operator
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: tungsten-auth
+                  key: password
+            - name: K8S_PROVIDER
+              value: "OpenShift"
+            - name: WATCH_NAMESPACE
+              value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "tf-operator"
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                - key: "node-role.kubernetes.io/master"
+                  operator: Exists
+      tolerations:
+      - key: node-role.kubernetes.io/master
+        operator: Exists
+        effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoSchedule

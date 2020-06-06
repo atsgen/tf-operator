@@ -116,21 +116,31 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data.Data["KUBERNETES_POD_SUBNETS"] = cr.Spec.PodNetwork.Cidr
 	data.Data["KUBERNETES_SERVICE_SUBNETS"] = cr.Spec.ServiceNetwork.Cidr
 
-	manifests, err := render.RenderDir(filepath.Join("/bindata", "network/tungsten/"), &data)
+	manifests, err := render.RenderDir(filepath.Join("/bindata", "tungsten/"), &data)
 	if err != nil {
 		log.Info("Failed to render yaml files " + err.Error());
 		return err
 	}
 
 	objs = append(objs, manifests...)
+	if utils.IsOpenShiftCluster() {
+                // cluster is running for openshift, load objects needed for openshift
+		manifests, err := render.RenderDir(filepath.Join("/bindata", "openshift/"), &data)
+		if err != nil {
+			log.Info("Failed to render yaml files " + err.Error());
+			return err
+		}
+		objs = append(objs, manifests...)
+	}
+
 	for _, obj := range objs {
 		if err := controllerutil.SetControllerReference(cr, obj, r.scheme); err!= nil {
 			log.Info(err.Error())
 			return err
 		}
 		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
-			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
 			log.Info(err.Error())
+			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
 			return err
 		}
 	}

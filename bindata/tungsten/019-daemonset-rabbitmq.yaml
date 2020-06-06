@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: config-zookeeper
+  name: rabbitmq
   namespace: {{ .TF_NAMESPACE }}
   labels:
-    app: config-zookeeper
+    app: rabbitmq
 spec:
   selector:
     matchLabels:
-      app: config-zookeeper
+      app: rabbitmq
   template:
     metadata:
       labels:
-        app: config-zookeeper
+        app: rabbitmq
     spec:
       affinity:
         nodeAffinity:
@@ -25,10 +25,13 @@ spec:
       - key: node-role.kubernetes.io/master
         operator: Exists
         effect: NoSchedule
+      - key: node.kubernetes.io/not-ready
+        operator: Exists
+        effect: NoSchedule
       hostNetwork: true
       containers:
-      - name: config-zookeeper
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-external-zookeeper:{{ .CONTAINER_TAG }}"
+      - name: rabbitmq
+        image: "{{ .CONTAINER_REGISTRY }}/contrail-external-rabbitmq:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
@@ -37,18 +40,18 @@ spec:
         - configMapRef:
             name: env
         - configMapRef:
-            name: configzookeeperenv
+            name: rabbitmq-config
         volumeMounts:
-        - mountPath: /var/lib/zookeeper
-          name: zookeeper-data
-        - mountPath: /var/log/zookeeper
-          name: zookeeper-logs
+        - mountPath: /var/lib/rabbitmq
+          name: rabbitmq-data
+        - mountPath: /var/log/rabbitmq
+          name: rabbitmq-logs
       imagePullSecrets:
       - name: {{ .TUNGSTEN_IMAGE_PULL_SECRET }}
       volumes:
-      - name: zookeeper-data
+      - name: rabbitmq-data
         hostPath:
-          path: /var/lib/contrail/config-zookeeper
-      - name: zookeeper-logs
+          path: /var/lib/contrail/rabbitmq
+      - name: rabbitmq-logs
         hostPath:
-          path: /var/log/contrail/config-zookeeper
+          path: /var/log/contrail/rabbitmq
