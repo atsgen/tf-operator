@@ -19,7 +19,7 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.tungsten.io/analyticsdb"
+              - key: "node-role.tungsten.io/analytics"
                 operator: Exists
       shareProcessNamespace: true
       tolerations:

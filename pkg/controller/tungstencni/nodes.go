@@ -30,12 +30,12 @@ func newNodeList() (n *NodeList) {
 	return nl
 }
 
-func SetNodeLabels(cl client.Client, nodeName string, labels []string) error {
+func SetNodeLabels(cl client.Client, nodeName string, labels []string, dType string) error {
 	node := &corev1.Node{}
 
 	err := cl.Get(context.TODO(), client.ObjectKey{Name: nodeName}, node)
 	if err != nil {
-		log.Info("Prabhjot Failed to get node with error " + err.Error())
+		log.Info("Failed to get node with error " + err.Error())
 		return err
 	}
 
@@ -43,22 +43,23 @@ func SetNodeLabels(cl client.Client, nodeName string, labels []string) error {
 	// delete previous labels
 	delete(newNode.Labels, "node-role.tungsten.io/vpp")
 	delete(newNode.Labels, "node-role.tungsten.io/agent")
-	delete(newNode.Labels, "node-role.tungsten.io/analytics")
-	delete(newNode.Labels, "node-role.tungsten.io/analytics_alarm")
-	delete(newNode.Labels, "node-role.tungsten.io/analytics_snmp")
-	delete(newNode.Labels, "node-role.tungsten.io/analyticsdb")
-	delete(newNode.Labels, "node-role.tungsten.io/config")
-	delete(newNode.Labels, "node-role.tungsten.io/configdb")
-	delete(newNode.Labels, "node-role.tungsten.io/control")
-	delete(newNode.Labels, "node-role.tungsten.io/webui")
+	delete(newNode.Labels, NODE_ROLE_ANALYTICS)
+	delete(newNode.Labels, NODE_ROLE_ANALYTICS_ALARM)
+	delete(newNode.Labels, NODE_ROLE_ANALYTICS_SNMP)
+	delete(newNode.Labels, NODE_ROLE_ANALYTICS_DB)
+	delete(newNode.Labels, NODE_ROLE_CONFIG)
+	delete(newNode.Labels, NODE_ROLE_CONFIG_DB)
+	delete(newNode.Labels, NODE_ROLE_CONTROL)
+	delete(newNode.Labels, NODE_ROLE_WEBUI)
 
+	newNode.Labels[NODE_ROLE_DATAPATH] = dType
 	for _,label := range labels {
 		newNode.Labels[label] = ""
 	}
 
 	err = cl.Patch(context.TODO(), newNode, client.MergeFrom(node))
 	if err != nil {
-		log.Info("Prabhjot Failed to patch node with error " + err.Error())
+		log.Info("Failed to patch node with error " + err.Error())
 		return err
 	}
 

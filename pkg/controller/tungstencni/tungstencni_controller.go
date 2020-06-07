@@ -41,23 +41,20 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 		return e
 	}
 
-	computeRole := NODE_ROLE_VPP
+	datapathType := DATAPATH_VPP
 	if cr.Spec.UseVrouter {
-		computeRole = NODE_ROLE_VROUTER
+		datapathType = DATAPATH_VROUTER
 	}
-	agentLabels := []string{computeRole}
-	allLabels := []string{computeRole,
-				NODE_ROLE_ANALYTICS,
+	noLabels := []string{}
+	allLabels := []string{NODE_ROLE_ANALYTICS,
 				NODE_ROLE_ANALYTICS_ALARM,
 				NODE_ROLE_ANALYTICS_SNMP,
-				NODE_ROLE_ANALYTICS_DB,
 				NODE_ROLE_CONFIG,
-				NODE_ROLE_CONFIG_DB,
 				NODE_ROLE_CONTROL,
 				NODE_ROLE_WEBUI}
 	for _, name := range nodes.WorkerNodes {
 		// enable agent for all nodes
-		e = SetNodeLabels(r.client, name, agentLabels)
+		e = SetNodeLabels(r.client, name, noLabels, datapathType)
 		if e != nil {
 			return e
 		}
@@ -65,7 +62,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 
 	for _, name := range nodes.MasterNodes {
 		// enable all labels for master nodes
-		e = SetNodeLabels(r.client, name, allLabels)
+		e = SetNodeLabels(r.client, name, allLabels, datapathType)
 		if e != nil {
 			return e
 		}

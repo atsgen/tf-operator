@@ -6,9 +6,12 @@ const (
 	TF_OPERATOR_OBJECT_DEPLOYED        = "Deployed"
 	TF_OPERATOR_OBJECT_NOT_SUPPORTED   = "Not-Supported"
 
+	// datapath types
+	DATAPATH_VPP               = "vpp"
+	DATAPATH_VROUTER           = "vrouter"
+
 	// node roles
-	NODE_ROLE_VPP              = "node-role.tungsten.io/vpp"
-	NODE_ROLE_VROUTER          = "node-role.tungsten.io/agent"
+	NODE_ROLE_DATAPATH         = "node-role.tungsten.io/datapath"
 	NODE_ROLE_ANALYTICS        = "node-role.tungsten.io/analytics"
 	NODE_ROLE_ANALYTICS_ALARM  = "node-role.tungsten.io/analytics_alarm"
 	NODE_ROLE_ANALYTICS_SNMP   = "node-role.tungsten.io/analytics_snmp"

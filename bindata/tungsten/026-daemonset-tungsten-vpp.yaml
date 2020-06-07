@@ -20,8 +20,10 @@ spec:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
             - matchExpressions:
-              - key: "node-role.tungsten.io/vpp"
-                operator: Exists
+              - key: "node-role.tungsten.io/datapath"
+                operator: In
+                values:
+                - "vpp"
       #Enable tolerations for single node setup
       tolerations:
       - key: node-role.kubernetes.io/master
