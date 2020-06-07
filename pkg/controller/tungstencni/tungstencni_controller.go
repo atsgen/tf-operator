@@ -9,12 +9,15 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/manager"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -165,6 +168,44 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// Watch for changes to primary resource TungstenCNI
 	err = c.Watch(&source.Kind{Type: &tungstenv1alpha1.TungstenCNI{}}, &handler.EnqueueRequestForObject{})
+	if err != nil {
+		return err
+	}
+
+	// map node scaling events to configure CNI objects as needed
+	mapFn := handler.ToRequestsFunc(
+		func(a handler.MapObject) []reconcile.Request {
+			return []reconcile.Request{
+				{NamespacedName: types.NamespacedName{
+					Name:      values.TF_OPERATOR_CONFIG,
+				}},
+			}
+		})
+
+
+	// we are intrested only in addition/removal of nodes and we will be
+	// ignoring update events for nodes
+	p := predicate.Funcs{
+		UpdateFunc: func(e event.UpdateEvent) bool {
+			log.Info("Ignoring update to object: " + e.MetaNew.GetName() + ", in namespace: " + e.MetaNew.GetNamespace())
+			return false
+		},
+		CreateFunc: func(e event.CreateEvent) bool {
+			// any addition of new node should trigger reconcile
+			return true
+		},
+		DeleteFunc: func(e event.DeleteEvent) bool {
+			// any removal of node should trigger reconcile
+			return true
+		},
+	}
+
+	err = c.Watch(
+		&source.Kind{Type: &corev1.Node{}},
+		&handler.EnqueueRequestsFromMapFunc{
+			ToRequests: mapFn,
+		},
+		p)
 	if err != nil {
 		return err
 	}
