@@ -187,15 +187,16 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// ignoring update events for nodes
 	p := predicate.Funcs{
 		UpdateFunc: func(e event.UpdateEvent) bool {
-			log.Info("Ignoring update to object: " + e.MetaNew.GetName() + ", in namespace: " + e.MetaNew.GetNamespace())
 			return false
 		},
 		CreateFunc: func(e event.CreateEvent) bool {
 			// any addition of new node should trigger reconcile
+			log.Info("Trigger reconcile, Detected new node: " + e.Meta.GetName())
 			return true
 		},
 		DeleteFunc: func(e event.DeleteEvent) bool {
 			// any removal of node should trigger reconcile
+			log.Info("Trigger reconcile, node removed: " + e.Meta.GetName())
 			return true
 		},
 	}
