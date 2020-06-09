@@ -52,6 +52,13 @@ operator-sdk build atsgen/tf-operator:v0.0.1
 
 ## Roll-Out Operator based installation
 initialise and run tf-operator
+<b>Note:</b> Before starting, you will need to configure hosts file on each node.
+```
+vim /etc/hosts
+#Add the following lines:
+<ip-address> <master-node-hostname>
+<ip-address> <worker-node-hostname>
+```
 ```
 # assumed to be executed from within the top level of repo
 kubectl create -f deploy/namespace.yaml
@@ -71,6 +78,6 @@ tf operator assumes to enable tungsten fabric controller on master nodes only an
 
 Once everything is ready the cluster can be rolled out using
 ```
-kubectl create -f deploy/crds/atsgen.com_v1alpha1_tungstencni_cr.yaml
+kubectl create -f deploy/crds/tungsten.atsgen.com_v1alpha1_tungstencni_cr.yaml
 ```
 
