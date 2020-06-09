@@ -52,6 +52,7 @@ operator-sdk build atsgen/tf-operator:v0.0.1
 
 ## Roll-Out Operator based installation
 initialise and run tf-operator
+
 <b>Note:</b> Before starting, you will need to configure hosts file on each node.
 ```
 vim /etc/hosts
