@@ -91,8 +91,12 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	if utils.IsOpenShiftCluster() {
 		// we don't support building KMOD for openshift
 		data.Data["TUNGSTEN_KMOD"] = "init"
+		data.Data["CNI_BIN_DIR"] = values.OPENSHIFT_CNI_BIN_DIR
+		data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_CNI_CONF_DIR
 	} else {
 		data.Data["TUNGSTEN_KMOD"] = "build"
+		data.Data["CNI_BIN_DIR"] = values.DEFAULT_CNI_BIN_DIR
+		data.Data["CNI_CONF_DIR"] = values.DEFAULT_CNI_CONF_DIR
 	}
 	data.Data["CONTROLLER_NODES"] = nodes.MasterNodesStr
 	data.Data["CONTROL_NODES"] = nodes.MasterNodesStr
