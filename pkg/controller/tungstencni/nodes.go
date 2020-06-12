@@ -10,10 +10,11 @@ import (
 )
 
 type NodeList struct {
-	MasterNodes    map[string]string
-	WorkerNodes    map[string]string
-	MasterNodesStr string
-	NodesStr       string
+	MasterNodes        map[string]string
+	WorkerNodes        map[string]string
+	DefultApiServer    string
+	MasterNodesStr     string
+	NodesStr           string
 }
 
 type TungstenRoleList struct {
@@ -93,6 +94,9 @@ func FetchNodeList(client client.Client) (*NodeList, error) {
 				log.Info("discovered node: " + node.Name + ", ip: " + ipAddress + ", is master: " + strconv.FormatBool(isMaster))
 				if isMaster {
 					nodeList.MasterNodes[ipAddress] = node.Name
+					if nodeList.DefultApiServer == "" {
+						nodeList.DefultApiServer = ipAddress
+					}
 					if nodeList.MasterNodesStr == "" {
 						nodeList.MasterNodesStr = ipAddress
 					} else {

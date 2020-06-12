@@ -31,7 +31,7 @@ func GetAdminPassword() string {
 func GetKubernetesApiServer() string {
 	server, found := os.LookupEnv(KubernetesServiceHostEnvVar)
 	if !found {
-		return "127.0.0.1"
+		return ""
 	}
 	return server
 }

@@ -12,6 +12,7 @@ import (
 	// Import all Kubernetes client auth plugins (e.g. Azure, GCP, OIDC, etc.)
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/clientcmd"
 
 	"github.com/atsgen/tf-operator/pkg/apis"
 	"github.com/atsgen/tf-operator/pkg/controller"
@@ -40,6 +41,15 @@ var (
 	operatorMetricsPort int32 = 8686
 )
 var log = logf.Log.WithName("cmd")
+
+// urlOnlyKubeconfig is a slight hack; we need to get the apiserver from the
+// kubeconfig but should use the in-cluster service account
+var urlOnlyKubeconfig string
+
+func init() {
+	flag.StringVar(&urlOnlyKubeconfig, "url-only-kubeconfig", "",
+		"Path to a kubeconfig, but only for the apiserver url.")
+}
 
 func printVersion() {
 	log.Info(fmt.Sprintf("Operator Version: %s", version.Version))
@@ -77,19 +87,24 @@ func main() {
 		os.Exit(1)
 	}
 
+	// Hack: the tf operator can't use the apiserver service ip, since there's
+	// no network. We also can't hard-code it to 127.0.0.1, because we run during
+	// bootstrap. Instead, we bind-mount in the kubelet's kubeconfig, but just
+	// use it to get the apiserver url.
+	if urlOnlyKubeconfig != "" {
+		err = setKubernetesApiEnv(urlOnlyKubeconfig)
+		if err != nil {
+			log.Error(err, "Failed to set K8S API config")
+			os.Exit(1)
+		}
+	}
+
 	// Get a config to talk to the apiserver
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Error(err, "")
 		os.Exit(1)
 	}
-
-	err = setKubernetesApiEnv(cfg)
-	if err != nil {
-		log.Error(err, "")
-		os.Exit(1)
-	}
-
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
@@ -208,19 +223,24 @@ func serveCRMetrics(cfg *rest.Config) error {
 	return nil
 }
 
-func setKubernetesApiEnv(cfg *rest.Config) error {
-	host := cfg.Host
-	// host can be in url form or host:port
-	// so we will try decoding both ways
-	log.Info(fmt.Sprintf("Got kubernetes api: %s", host))
-	url, err := url.Parse(host)
+func setKubernetesApiEnv(kubeconfigFile string) error {
+	kubeconfig, err := clientcmd.LoadFromFile(kubeconfigFile)
 	if err != nil {
-		log.Info("failed to set k8s api server")
+		return err
+	}
+	clusterName := kubeconfig.Contexts[kubeconfig.CurrentContext].Cluster
+	apiURL := kubeconfig.Clusters[clusterName].Server
+	log.Info(fmt.Sprintf("Got kubernetes api: %s", apiURL))
+
+	url, err := url.Parse(apiURL)
+	if err != nil {
 		return err
 	}
 
 	log.Info(fmt.Sprintf("kubernetes api host %s, port %s", url.Hostname(),
 				url.Port()))
+	// The kubernetes in-cluster functions don't let you override the
+	// apiserver directly; gotta "pass" it via environment vars.
 	os.Setenv(utils.KubernetesServiceHostEnvVar, url.Hostname())
 	os.Setenv(utils.KubernetesServicePortEnvVar, url.Port())
 	return nil

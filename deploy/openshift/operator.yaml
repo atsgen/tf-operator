@@ -21,6 +21,7 @@ spec:
           image: atsgen/tf-operator:v0.0.1
           command:
           - tf-operator
+          - "--url-only-kubeconfig=/etc/kubernetes/kubeconfig"
           imagePullPolicy: IfNotPresent
           env:
             - name: ADMIN_PASSWORD
@@ -38,6 +39,10 @@ spec:
                   fieldPath: metadata.name
             - name: OPERATOR_NAME
               value: "tf-operator"
+          volumeMounts:
+          - mountPath: /etc/kubernetes/kubeconfig
+            name: host-kubeconfig
+            readOnly: true
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -45,6 +50,7 @@ spec:
               - matchExpressions:
                 - key: "node-role.kubernetes.io/master"
                   operator: Exists
+      priorityClassName: "system-cluster-critical"
       tolerations:
       - key: node-role.kubernetes.io/master
         operator: Exists
@@ -52,3 +58,7 @@ spec:
       - key: node.kubernetes.io/not-ready
         operator: Exists
         effect: NoSchedule
+      volumes:
+        - name: host-kubeconfig
+          hostPath:
+            path: /etc/kubernetes/kubeconfig

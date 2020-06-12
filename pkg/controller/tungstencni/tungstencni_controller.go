@@ -103,7 +103,11 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 	data.Data["JVM_EXTRA_OPTS"] = "-Xms1g -Xmx2g"
 	data.Data["KAFKA_NODES"] = nodes.MasterNodesStr
 	data.Data["KUBERNETES_API_SECURE_PORT"] = utils.GetKubernetesApiPort()
-	data.Data["KUBERNETES_API_SERVER"] = utils.GetKubernetesApiServer()
+	apiServer := utils.GetKubernetesApiServer()
+	if apiServer == "" {
+		apiServer = nodes.DefultApiServer
+	}
+	data.Data["KUBERNETES_API_SERVER"] = apiServer
 	data.Data["KUBERNETES_PUBLIC_FIP_POOL"] = ""
 	data.Data["TUNGSTEN_IMAGE_PULL_SECRET"] = ""
 	data.Data["LOG_LEVEL"] = "SYS_NOTICE"
