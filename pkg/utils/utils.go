@@ -27,3 +27,19 @@ func GetAdminPassword() string {
 	}
 	return password
 }
+
+func GetKubernetesApiServer() string {
+	server, found := os.LookupEnv(KubernetesServiceHostEnvVar)
+	if !found {
+		return "127.0.0.1"
+	}
+	return server
+}
+
+func GetKubernetesApiPort() string {
+	port, found := os.LookupEnv(KubernetesServicePortEnvVar)
+	if !found {
+		return "6443"
+	}
+	return port
+}

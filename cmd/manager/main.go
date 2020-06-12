@@ -5,6 +5,7 @@ import (
 	"errors"
 	"flag"
 	"fmt"
+	"net/url"
 	"os"
 	"runtime"
 
@@ -14,6 +15,7 @@ import (
 
 	"github.com/atsgen/tf-operator/pkg/apis"
 	"github.com/atsgen/tf-operator/pkg/controller"
+	"github.com/atsgen/tf-operator/pkg/utils"
 	"github.com/atsgen/tf-operator/version"
 
 	"github.com/operator-framework/operator-sdk/pkg/k8sutil"
@@ -81,6 +83,13 @@ func main() {
 		log.Error(err, "")
 		os.Exit(1)
 	}
+
+	err = setKubernetesApiEnv(cfg)
+	if err != nil {
+		log.Error(err, "")
+		os.Exit(1)
+	}
+
 
 	ctx := context.TODO()
 	// Become the leader before proceeding
@@ -196,5 +205,23 @@ func serveCRMetrics(cfg *rest.Config) error {
 	if err != nil {
 		return err
 	}
+	return nil
+}
+
+func setKubernetesApiEnv(cfg *rest.Config) error {
+	host := cfg.Host
+	// host can be in url form or host:port
+	// so we will try decoding both ways
+	log.Info(fmt.Sprintf("Got kubernetes api: %s", host))
+	url, err := url.Parse(host)
+	if err != nil {
+		log.Info("failed to set k8s api server")
+		return err
+	}
+
+	log.Info(fmt.Sprintf("kubernetes api host %s, port %s", url.Hostname(),
+				url.Port()))
+	os.Setenv(utils.KubernetesServiceHostEnvVar, url.Hostname())
+	os.Setenv(utils.KubernetesServicePortEnvVar, url.Port())
 	return nil
 }
