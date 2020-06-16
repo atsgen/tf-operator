@@ -129,21 +129,11 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 			return reconcile.Result{}, err
 		}
 
-		// Get resource before updating to use in the Patch call.
-		patchFrom := client.MergeFrom(instance.DeepCopy())
-		instance.Status.ClusterNetwork = instance.Spec.ClusterNetwork
-		instance.Status.ServiceNetwork = instance.Spec.ServiceNetwork
-		instance.Status.NetworkType = values.OPENSHIFT_ATSGEN_CNI
-		// TODO(prabhjot) for OpenShift we need to report MTU as per system
-		// capabilities. However, when do VxLAN forwarding to account for tunnel
-		// headers in a default environment we will be reporting 1410 as the MTU
-		// to OpenShift infra. This is small value, but should work in general for
-		// most of the deployments
-		instance.Status.ClusterNetworkMTU = 1410
-		if err = r.client.Patch(context.Background(), instance, patchFrom); err != nil {
-			log.Info("Error patching openshift network status", err, reqLogger.WithValues("openshiftConfig", instance))
+		err = r.setNetworkStatus(instance)
+		if err != nil {
 			return reconcile.Result{}, err
 		}
+
 		// CNI created successfully - don't requeue
 		return reconcile.Result{}, nil
 	} else if err != nil {
@@ -161,9 +151,38 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, nil
 	}
 
+	err = r.setNetworkStatus(instance)
+	if err != nil {
+		return reconcile.Result{}, err
+	}
+
 	// CNI already exists - don't requeue
 	reqLogger.Info("Skip reconcile: CNI already exists")
 	return reconcile.Result{}, nil
+}
+
+func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
+	if cr.Status.NetworkType == values.OPENSHIFT_ATSGEN_CNI {
+		// we don't need to update anything here
+		return nil
+	}
+
+	// Get resource before updating to use in the Patch call.
+	patchFrom := client.MergeFrom(cr.DeepCopy())
+	cr.Status.ClusterNetwork = cr.Spec.ClusterNetwork
+	cr.Status.ServiceNetwork = cr.Spec.ServiceNetwork
+	cr.Status.NetworkType = values.OPENSHIFT_ATSGEN_CNI
+	// TODO(prabhjot) for OpenShift we need to report MTU as per system
+	// capabilities. However, when do VxLAN forwarding to account for tunnel
+	// headers in a default environment we will be reporting 1410 as the MTU
+	// to OpenShift infra. This is small value, but should work in general for
+	// most of the deployments
+	cr.Status.ClusterNetworkMTU = 1410
+	if err := r.client.Patch(context.Background(), cr, patchFrom); err != nil {
+		log.Info("Error patching openshift network status " + err.Error())
+		return err
+	}
+	return nil
 }
 
 // newTungstenCNI returns a new tungsten CNI object

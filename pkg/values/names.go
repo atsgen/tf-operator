@@ -13,4 +13,5 @@ const (
 
 	OPENSHIFT_CNI_BIN_DIR          = "/var/lib/cni/bin"
 	OPENSHIFT_CNI_CONF_DIR         = "/etc/kubernetes/cni/"
+	OPENSHIFT_MULTUS_CONF_DIR      = "/var/run/multus/cni/"
 )

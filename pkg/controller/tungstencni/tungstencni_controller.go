@@ -21,6 +21,9 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
 	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+
+	ocv1 "github.com/openshift/api/operator/v1"
+
 	"github.com/atsgen/tf-operator/pkg/apply"
 	"github.com/atsgen/tf-operator/pkg/render"
 	"github.com/atsgen/tf-operator/pkg/utils"
@@ -30,8 +33,8 @@ import (
 var log = logf.Log.WithName("controller_tungstencni")
 
 /**
-* USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
-* business logic.  Delete these comments after modifying this file.*
+ * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
+ * business logic.  Delete these comments after modifying this file.*
  */
 
 // TODO(Prabhjot) need to fix taking parameters from CNI Object
@@ -92,7 +95,20 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 		// we don't support building KMOD for openshift
 		data.Data["TUNGSTEN_KMOD"] = "init"
 		data.Data["CNI_BIN_DIR"] = values.OPENSHIFT_CNI_BIN_DIR
-		data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_CNI_CONF_DIR
+		networkConfig := &ocv1.Network{}
+		err := r.client.Get(context.TODO(),
+			types.NamespacedName{Name: values.OPENSHIFT_NETWORK_CONFIG,},
+			networkConfig)
+		if err != nil {
+			log.Info("Failed to fetch openshift network config " + err.Error());
+			return err
+		}
+		if (networkConfig.Spec.DisableMultiNetwork == nil ||
+			!(*networkConfig.Spec.DisableMultiNetwork)) {
+			data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_MULTUS_CONF_DIR
+		} else {
+			data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_CNI_CONF_DIR
+		}
 	} else {
 		data.Data["TUNGSTEN_KMOD"] = "build"
 		data.Data["CNI_BIN_DIR"] = values.DEFAULT_CNI_BIN_DIR

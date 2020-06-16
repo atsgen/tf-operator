@@ -15,8 +15,8 @@ CGO_OPT := "CGO_ENABLED=0"
 GIT_REPO := "github.com/atsgen/tf-operator/"
 MANAGER_DIR := "$(GIT_REPO)cmd/manager"
 
-GC_FLAGS := -gcflags "all=-trimpath=$(PARENT_DIR)"
-ASM_FLAGS := -asmflags "all=-trimpath=$(PARENT_DIR)"
+GC_FLAGS := "-gcflags=all=-trimpath=$(SB_TOP)"
+ASM_FLAGS := "-asmflags=all=-trimpath=$(SB_TOP)"
 
 all: build image
 
