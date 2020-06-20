@@ -20,16 +20,41 @@ type ServiceNetworkType struct {
 	Cidr string `json:"cidr,omitempty"`
 }
 
+// Define IpFabricNetwork parameters for Tugnsten Fabric
+type IpFabricNetworkType struct {
+	// ip fabric network CIDR
+	Cidr string `json:"cidr,omitempty"`
+}
+
+// +kubebuilder:validation:Enum=snat;enable
+type IpForwardingType string
+
 // Define the desired TungstenCNI deployment parameters
 type TungstenCNISpec struct {
 	// release tag for the container images used
 	ReleaseTag string `json:"releaseTag"`
+
 	// use vrouter as datpath for CNI
 	UseVrouter bool   `json:"useVrouter,omitempty"`
+
+	// cluster name
+	ClusterName string  `json:"clusterName,omitempty"`
+
 	// pod network parameters
 	PodNetwork PodNetworkType `json:"podNetwork,omitempty"`
+
 	// service network parameters
 	ServiceNetwork ServiceNetworkType `json:"serviceNetwork,omitempty"`
+
+	// ip fabric network parameters
+	IpFabricNetwork IpFabricNetworkType `json:"ipFabricNetwork,omitempty"`
+
+	// ip fabric forwarding, supported value enable, snat,
+	// where as empty field means ip fabric forwarding disabled
+	IpForwarding IpForwardingType  `json:"ipForwarding,omitempty"`
+
+	// use host network services
+	UseHostNewtorkService bool  `json:"useHostNewtorkService,omitempty"`
 }
 
 // TungstenCNIStatus defines the observed state of TungstenCNI
@@ -37,6 +62,8 @@ type TungstenCNIStatus struct {
 	// state of deployment
 	State string `json:"state,omitempty"`
 	Error string `json:"error,omitempty"`
+	ReleaseTag string `json:"releaseTag,omitempty"`
+	Controllers []string `json:"controllers,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
@@ -44,7 +71,7 @@ type TungstenCNIStatus struct {
 // TungstenCNI is the Schema for the tungstencnis API
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:path=tungstencnis,scope=Cluster
-// +kubebuilder:printcolumn:name="Release",type=string,JSONPath=`.spec.releaseTag`
+// +kubebuilder:printcolumn:name="Release",type=string,JSONPath=`.status.releaseTag`
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 type TungstenCNI struct {

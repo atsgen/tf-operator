@@ -194,11 +194,18 @@ func newTungstenCNI(cr *configv1.Network) *tungstenv1alpha1.TungstenCNI {
 		Spec: tungstenv1alpha1.TungstenCNISpec{
 			ReleaseTag:    values.TF_RELEASE_TAG,
 			UseVrouter:    true,
+			IpForwarding:  "snat",
+			UseHostNewtorkService: true,
 		},
 	}
 
 	if len(cr.Spec.ClusterNetwork) != 0 {
 		cni.Spec.PodNetwork = tungstenv1alpha1.PodNetworkType{
+					Cidr: cr.Spec.ClusterNetwork[0].CIDR,
+				}
+		// TODO(prabhjot) need to see how should this actually
+		// work of OpenShift
+		cni.Spec.IpFabricNetwork = tungstenv1alpha1.IpFabricNetworkType{
 					Cidr: cr.Spec.ClusterNetwork[0].CIDR,
 				}
 	}
@@ -207,5 +214,6 @@ func newTungstenCNI(cr *configv1.Network) *tungstenv1alpha1.TungstenCNI {
 					Cidr: cr.Spec.ServiceNetwork[0],
 				}
 	}
+
 	return cni
 }

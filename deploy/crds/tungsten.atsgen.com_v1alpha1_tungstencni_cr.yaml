@@ -4,4 +4,13 @@ metadata:
   name: default
 spec:
   releaseTag: R2003-latest
+  clusterName: k8s
+  ipFabricNetwork:
+    cidr: 10.64.0.0/12
+  podNetwork:
+    cidr: 10.32.0.0/12
+  serviceNetwork:
+    cidr: 10.96.0.0/12
+  ipForwarding: snat
+  useHostNewtorkService: true
   useVrouter: true

@@ -4,7 +4,7 @@ metadata:
   name: tungstencnis.tungsten.atsgen.com
 spec:
   additionalPrinterColumns:
-  - JSONPath: .spec.releaseTag
+  - JSONPath: .status.releaseTag
     name: Release
     type: string
   - JSONPath: .status.state
@@ -41,6 +41,23 @@ spec:
         spec:
           description: Define the desired TungstenCNI deployment parameters
           properties:
+            clusterName:
+              description: cluster name
+              type: string
+            ipFabricNetwork:
+              description: ip fabric network parameters
+              properties:
+                cidr:
+                  description: ip fabric network CIDR
+                  type: string
+              type: object
+            ipForwarding:
+              description: ip fabric forwarding, supported value enable, snat, where
+                as empty field means ip fabric forwarding disabled
+              enum:
+              - snat
+              - enable
+              type: string
             podNetwork:
               description: pod network parameters
               properties:
@@ -58,6 +75,9 @@ spec:
                   description: service network CIDR
                   type: string
               type: object
+            useHostNewtorkService:
+              description: use host network services
+              type: boolean
             useVrouter:
               description: use vrouter as datpath for CNI
               type: boolean
@@ -67,7 +87,13 @@ spec:
         status:
           description: TungstenCNIStatus defines the observed state of TungstenCNI
           properties:
+            controllers:
+              items:
+                type: string
+              type: array
             error:
+              type: string
+            releaseTag:
               type: string
             state:
               description: state of deployment

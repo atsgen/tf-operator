@@ -3,6 +3,7 @@ package tungstencni
 const (
 	// Operator object state
 	TF_OPERATOR_OBJECT_IGNORED         = "Not-Ready"
+	TF_OPERATOR_OBJECT_PENDING         = "Pending"
 	TF_OPERATOR_OBJECT_DEPLOYED        = "Deployed"
 	TF_OPERATOR_OBJECT_NOT_SUPPORTED   = "Not-Supported"
 
@@ -20,4 +21,8 @@ const (
 	NODE_ROLE_CONFIG_DB        = "node-role.tungsten.io/configdb"
 	NODE_ROLE_CONTROL          = "node-role.tungsten.io/control"
 	NODE_ROLE_WEBUI            = "node-role.tungsten.io/webui"
+
+	// IP Forwarding values
+	IP_FORWARDING_ENABLED      = "enable"
+	IP_FORWARDING_SNAT         = "snat"
 )
