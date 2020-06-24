@@ -1,8 +1,15 @@
 FROM alpine as runtime
+ARG OPERATOR_VERSION
 
 ENV OPERATOR=/usr/local/bin/tf-operator \
     USER_UID=1001 \
     USER_NAME=tf-operator
+
+LABEL vendor="atsgen" \
+      name="tf-operator" \
+      version=$OPERATOR_VERSION \
+      summary="Tungsten fabric operator" \
+      description="Tf-operator operator manages rollout and life cycle management of Tungsten Fabric CNI"
 
 # install operator binary
 COPY build/_output/bin/tf-operator ${OPERATOR}
@@ -14,3 +21,6 @@ RUN  /usr/local/bin/user_setup
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
 
 USER ${USER_UID}
+
+LABEL "com.atsgen.tungsten.service"=operator
+LABEL "com.atsgen.tungsten.container.name"=tf-operator
