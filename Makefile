@@ -27,8 +27,8 @@ build:
 
 .PHONY: image
 image:
-	docker build -t atsgen/tf-operator:$(OPERATOR_VERSION) -f build/Dockerfile .
-	docker build -t atsgen/tf-operator:$(OPERATOR_VERSION)-ubi -f build/Dockerfile.ubi .
+	docker build --build-arg OPERATOR_VERSION=$(OPERATOR_VERSION) -t atsgen/tf-operator:$(OPERATOR_VERSION) -f build/Dockerfile .
+	docker build --build-arg OPERATOR_VERSION=$(OPERATOR_VERSION) -t atsgen/tf-operator:$(OPERATOR_VERSION)-ubi -f build/Dockerfile.ubi .
 
 .PHONY: clean
 clean:

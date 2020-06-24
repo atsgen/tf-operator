@@ -1,14 +1,13 @@
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
-ARG VENDOR_DOMAIN=com.atsgen.tungsten
-ARG VENDOR_NAME=atsgen
+ARG OPERATOR_VERSION
 
 ENV OPERATOR=/usr/local/bin/tf-operator \
     USER_UID=1001 \
     USER_NAME=tf-operator
 
-LABEL vendor=$VENDOR_NAME \
+LABEL vendor="atsgen" \
       name="tf-operator" \
-      version=R2003-latest \
+      version=$OPERATOR_VERSION \
       summary="Tungsten fabric operator" \
       description="Tf-operator operator manages rollout and life cycle management of Tungsten Fabric CNI"
 
@@ -23,6 +22,5 @@ ENTRYPOINT ["/usr/local/bin/entrypoint"]
 
 USER ${USER_UID}
 
-ENV SERVICE_NAME=operator
-LABEL $VENDOR_DOMAIN".service"=$SERVICE_NAME
-LABEL $VENDOR_DOMAIN".container.name"=tf-operator
+LABEL "com.atsgen.tungsten.service"=operator
+LABEL "com.atsgen.tungsten.container.name"=tf-operator
