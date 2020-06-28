@@ -69,8 +69,9 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 		if utils.IsOpenShiftCluster() && len(nodes.MasterNodes) < 3 {
 			// return from here we will get notified when a new
 			// node is available
-			r.recorder.Event(cr, corev1.EventTypeNormal, "Pending",
-				fmt.Sprintf("waiting for master node discovery got %d/%d", len(nodes.MasterNodes), 3))
+			r.recorder.Event(cr, corev1.EventTypeNormal,
+				TF_OPERATOR_OBJECT_PENDING,
+				fmt.Sprintf("waiting for master node discovery (got %d/%d)", len(nodes.MasterNodes), 3))
 			return false, nil
 		}
 		i := 0
@@ -90,7 +91,8 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 			return false, err
 		}
 
-		r.recorder.Event(cr, corev1.EventTypeNormal, "Deployed",
+		r.recorder.Event(cr, corev1.EventTypeNormal,
+			TF_OPERATOR_OBJECT_DEPLOYED,
 			fmt.Sprintf("Discovered %d controller nodes", len(controllerIPs)))
 	} else {
 		controllerIPs = make(map[string]bool)
@@ -373,6 +375,8 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 	if s == TF_OPERATOR_OBJECT_IGNORED {
 		log.Info("Error!!! Ignoring tf-operator " + request.Name)
 		r.updateStatus(instance, s, d)
+		r.recorder.Event(instance, corev1.EventTypeWarning,
+			TF_OPERATOR_OBJECT_IGNORED, d)
 		return reconcile.Result{}, nil
 	}
 
