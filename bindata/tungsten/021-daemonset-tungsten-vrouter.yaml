@@ -109,6 +109,11 @@ spec:
         # e.g. https://github.com/Juniper/contrail-controller/blob/master/src/vnsw/agent/contrail/linux/pkt0_interface.cc: 48.
         securityContext:
           privileged: true
+{{- if eq .K8S_PROVIDER "OpenShift"}}
+        env:
+        - name: DHCP_OVERRIDE_VHOST
+          value: "true"
+{{- end}}
         envFrom:
         - configMapRef:
             name: env
@@ -140,6 +145,8 @@ spec:
           name: var-lib-contrail
         - mountPath: /var/crashes
           name: var-crashes
+        - mountPath: /host/etc
+          name: host-etc
         - mountPath: /tmp/serviceaccount
           name: pod-secret
       - name: tungsten-vrouter-nodemgr
@@ -220,6 +227,9 @@ spec:
       - name: agent-logs
         hostPath:
           path: /var/log/contrail/agent
+      - name: host-etc
+        hostPath:
+          path: /etc/
       - name: host-usr-bin
         hostPath:
           path: /opt/tungsten/bin
