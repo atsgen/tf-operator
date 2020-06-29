@@ -4,6 +4,7 @@ const (
 	// Operator object state
 	TF_OPERATOR_OBJECT_IGNORED         = "Not-Ready"
 	TF_OPERATOR_OBJECT_PENDING         = "Pending"
+	TF_OPERATOR_OBJECT_UPDATING        = "Updating"
 	TF_OPERATOR_OBJECT_DEPLOYED        = "Deployed"
 	TF_OPERATOR_OBJECT_NOT_SUPPORTED   = "Not-Supported"
 

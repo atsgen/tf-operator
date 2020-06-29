@@ -21,6 +21,11 @@ const (
 	// port address
 	KubernetesServicePortEnvVar = "KUBERNETES_SERVICE_PORT"
 
+	// OpenShiftMultusStatusEnvVar variable defines the env variable
+	// OPENSHIFT_MULTUS, which is used to indicate the whether multus
+	// is enabled for OpneShift or not
+	OpenShiftMultusStatusEnvVar = "OPENSHIFT_MULTUS"
+
 	// Value for k8s provider as OpenShift
 	OpenShiftProvider = "OpenShift"
 

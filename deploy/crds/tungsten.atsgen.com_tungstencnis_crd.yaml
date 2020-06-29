@@ -95,6 +95,8 @@ spec:
               type: string
             releaseTag:
               type: string
+            stage:
+              type: string
             state:
               description: state of deployment
               type: string

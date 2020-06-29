@@ -3,9 +3,8 @@ package tungstencni
 import (
 	"context"
 	"fmt"
-	"path/filepath"
+	"time"
 
-	"github.com/pkg/errors"
 	tungstenv1alpha1 "github.com/atsgen/tf-operator/pkg/apis/tungsten/v1alpha1"
 	corev1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -13,7 +12,6 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 	"sigs.k8s.io/controller-runtime/pkg/event"
 	"sigs.k8s.io/controller-runtime/pkg/handler"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -21,13 +19,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/predicate"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 	"sigs.k8s.io/controller-runtime/pkg/source"
-	uns "k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/client-go/tools/record"
 
 	ocv1 "github.com/openshift/api/operator/v1"
 
-	"github.com/atsgen/tf-operator/pkg/apply"
-	"github.com/atsgen/tf-operator/pkg/render"
 	"github.com/atsgen/tf-operator/pkg/utils"
 	"github.com/atsgen/tf-operator/pkg/values"
 )
@@ -36,32 +31,39 @@ var log = logf.Log.WithName("controller_tungstencni")
 
 var controllerIPs map[string]bool = make(map[string]bool)
 
-/**
- * USER ACTION REQUIRED: This is a scaffold file intended for the user to modify with their own Controller
- * business logic.  Delete these comments after modifying this file.*
- */
-
-func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI) {
-	switch cr.Spec.IpForwarding {
-	case IP_FORWARDING_ENABLED:
-		data.Data["KUBERNETES_IP_FABRIC_FORWARDING"] = "true"
-		data.Data["KUBERNETES_IP_FABRIC_SNAT"] = "false"
-	case IP_FORWARDING_SNAT:
-		data.Data["KUBERNETES_IP_FABRIC_FORWARDING"] = "false"
-		data.Data["KUBERNETES_IP_FABRIC_SNAT"] = "true"
-	default:
-		data.Data["KUBERNETES_IP_FABRIC_FORWARDING"] = "false"
-		data.Data["KUBERNETES_IP_FABRIC_SNAT"] = "false"
+func (r *ReconcileTungstenCNI) updateOpenShiftMultusStatus() error {
+	if !utils.IsOpenShiftCluster() {
+		return nil
 	}
+
+	_, err := utils.IsOpenShiftMultusEnabled()
+	if err == nil {
+		// we have already executed the block below, skip re doing it
+		return nil
+	}
+
+	networkConfig := &ocv1.Network{}
+	err = r.client.Get(context.TODO(),
+		types.NamespacedName{Name: values.OPENSHIFT_NETWORK_CONFIG,},
+		networkConfig)
+	if err != nil {
+		log.Info("Failed to fetch openshift network config " + err.Error());
+		return err
+	}
+	if (networkConfig.Spec.DisableMultiNetwork == nil ||
+		!(*networkConfig.Spec.DisableMultiNetwork)) {
+		utils.SetOpenShiftMultusStatus(true)
+	} else {
+		utils.SetOpenShiftMultusStatus(false)
+	}
+	return nil
 }
 
-func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.TungstenCNI) (bool, error) {
-	objs := []*uns.Unstructured{}
-
+func (r *ReconcileTungstenCNI) deployTungstenFabric(cr *tungstenv1alpha1.TungstenCNI) (string, error) {
 	nodes, e := FetchNodeList(r.client)
 
 	if e != nil {
-		return false, e
+		return "", e
 	}
 
 	// check if we have already identified Controller IPs
@@ -72,7 +74,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 			r.recorder.Event(cr, corev1.EventTypeNormal,
 				TF_OPERATOR_OBJECT_PENDING,
 				fmt.Sprintf("waiting for master node discovery (got %d/%d)", len(nodes.MasterNodes), 3))
-			return false, nil
+			return TF_OPERATOR_OBJECT_PENDING, nil
 		}
 		i := 0
 		for ip, _ := range nodes.MasterNodes {
@@ -88,7 +90,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 		// commit controller ips to status before going any further
 		err := r.updateControllerIPs(cr)
 		if err != nil {
-			return false, err
+			return "", err
 		}
 
 		r.recorder.Event(cr, corev1.EventTypeNormal,
@@ -112,7 +114,7 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 		// enable agent for all nodes
 		e = SetNodeLabels(r.client, name, noLabels, datapathType)
 		if e != nil {
-			return false, e
+			return "", e
 		}
 	}
 
@@ -130,129 +132,16 @@ func (r *ReconcileTungstenCNI) renderTungstenFabricCNI(cr *tungstenv1alpha1.Tung
 			e = SetNodeLabels(r.client, name, noLabels, datapathType)
 		}
 		if e != nil {
-			return false, e
+			return "", e
 		}
 	}
 
-	var controllerNodes string
-	for ip, _ := range controllerIPs {
-		if controllerNodes == "" {
-			controllerNodes = ip
-		} else {
-			controllerNodes = controllerNodes + "," + ip
-		}
+	e = r.updateOpenShiftMultusStatus()
+	if e != nil {
+		return "", e
 	}
 
-	data := render.MakeRenderData()
-	data.Data["K8S_PROVIDER"] = utils.GetKubernetesProvider()
-	data.Data["TF_NAMESPACE"] = values.TF_NAMESPACE
-	data.Data["AAA_MODE"] = "no-auth"
-	data.Data["ADMIN_PASSWORD"] = utils.GetAdminPassword()
-	data.Data["ANALYTICS_ALARM_NODES"] = controllerNodes
-	data.Data["ANALYTICS_API_VIP"] = ""
-	data.Data["ANALYTICSDB_NODES"] = controllerNodes
-	data.Data["ANALYTICS_NODES"] = controllerNodes
-	data.Data["ANALYTICS_SNMP_NODES"] = controllerNodes
-	data.Data["AUTH_MODE"] = "noauth"
-	data.Data["CLOUD_ORCHESTRATOR"] = "kubernetes"
-	data.Data["CONFIG_API_VIP"] = ""
-	data.Data["CONFIGDB_NODES"] = controllerNodes
-	data.Data["CONFIG_NODES"] = controllerNodes
-	data.Data["CONTAINER_REGISTRY"] = "atsgen"
-	data.Data["CONTAINER_TAG"] = cr.Spec.ReleaseTag
-
-	if cr.Spec.ClusterName == "" {
-		data.Data["KUBERNETES_CLUSTER_NAME"] = "k8s"
-	} else {
-		data.Data["KUBERNETES_CLUSTER_NAME"] = cr.Spec.ClusterName
-	}
-
-	updateIPForwarding(&data, cr)
-	if cr.Spec.UseHostNewtorkService {
-		data.Data["KUBERNETES_HOST_NETWORK_SERVICE"] = "true"
-	} else {
-		data.Data["KUBERNETES_HOST_NETWORK_SERVICE"] = "false"
-	}
-
-	if utils.IsOpenShiftCluster() {
-		// we don't support building KMOD for openshift
-		data.Data["TUNGSTEN_KMOD"] = "init"
-		data.Data["CNI_BIN_DIR"] = values.OPENSHIFT_CNI_BIN_DIR
-		networkConfig := &ocv1.Network{}
-		err := r.client.Get(context.TODO(),
-			types.NamespacedName{Name: values.OPENSHIFT_NETWORK_CONFIG,},
-			networkConfig)
-		if err != nil {
-			log.Info("Failed to fetch openshift network config " + err.Error());
-			return false, err
-		}
-		if (networkConfig.Spec.DisableMultiNetwork == nil ||
-			!(*networkConfig.Spec.DisableMultiNetwork)) {
-			data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_MULTUS_CONF_DIR
-		} else {
-			data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_CNI_CONF_DIR
-		}
-	} else {
-		data.Data["TUNGSTEN_KMOD"] = "build"
-		data.Data["CNI_BIN_DIR"] = values.DEFAULT_CNI_BIN_DIR
-		data.Data["CNI_CONF_DIR"] = values.DEFAULT_CNI_CONF_DIR
-	}
-	data.Data["CONTROLLER_NODES"] = controllerNodes
-	data.Data["CONTROL_NODES"] = controllerNodes
-	data.Data["JVM_EXTRA_OPTS"] = "-Xms1g -Xmx2g"
-	data.Data["KAFKA_NODES"] = controllerNodes
-	data.Data["KUBERNETES_API_SECURE_PORT"] = utils.GetKubernetesApiPort()
-	apiServer := utils.GetKubernetesApiServer()
-	if apiServer == "" {
-		apiServer = nodes.DefultApiServer
-	}
-	data.Data["KUBERNETES_API_SERVER"] = apiServer
-	data.Data["KUBERNETES_PUBLIC_FIP_POOL"] = ""
-	data.Data["TUNGSTEN_IMAGE_PULL_SECRET"] = ""
-	data.Data["LOG_LEVEL"] = "SYS_NOTICE"
-	data.Data["METADATA_PROXY_SECRET"] = "tungsten"
-	data.Data["PHYSICAL_INTERFACE"] = ""
-	data.Data["RABBITMQ_NODE_PORT"] = "5673"
-	data.Data["RABBITMQ_NODES"] = controllerNodes
-	data.Data["VROUTER_GATEWAY"] = ""
-	data.Data["WEBUI_NODES"] = controllerNodes
-	data.Data["WEBUI_VIP"] = ""
-	data.Data["ZOOKEEPER_PORT"] = "2181"
-	data.Data["ZOOKEEPER_PORTS"] = "2888:3888"
-	data.Data["DPDK_UIO_DRIVER"] = "igb_uio"
-	data.Data["KUBERNETES_POD_SUBNETS"] = cr.Spec.PodNetwork.Cidr
-	data.Data["KUBERNETES_SERVICE_SUBNETS"] = cr.Spec.ServiceNetwork.Cidr
-	data.Data["KUBERNETES_IP_FABRIC_SUBNETS"] = cr.Spec.IpFabricNetwork.Cidr
-
-	manifests, err := render.RenderDir(filepath.Join("/bindata", "tungsten/"), &data)
-	if err != nil {
-		log.Info("Failed to render yaml files " + err.Error());
-		return false, err
-	}
-
-	objs = append(objs, manifests...)
-	if utils.IsOpenShiftCluster() {
-                // cluster is running for openshift, load objects needed for openshift
-		manifests, err := render.RenderDir(filepath.Join("/bindata", "openshift/"), &data)
-		if err != nil {
-			log.Info("Failed to render yaml files " + err.Error());
-			return false, err
-		}
-		objs = append(objs, manifests...)
-	}
-
-	for _, obj := range objs {
-		if err := controllerutil.SetControllerReference(cr, obj, r.scheme); err!= nil {
-			log.Info(err.Error())
-			return false, err
-		}
-		if err := apply.ApplyObject(context.TODO(), r.client, obj); err != nil {
-			log.Info(err.Error())
-			err = errors.Wrapf(err, "could not apply (%s) %s/%s", obj.GroupVersionKind(), obj.GetNamespace(), obj.GetName())
-			return false, err
-		}
-	}
-	return true, nil
+	return renderTungstenFabric(r, cr, nodes)
 }
 
 // Add creates a new TungstenCNI Controller and adds it to the Manager. The Manager will set fields on the Controller
@@ -380,16 +269,17 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 		return reconcile.Result{}, nil
 	}
 
-	deployed, err := r.renderTungstenFabricCNI(instance)
+	s, err = r.deployTungstenFabric(instance)
 	if err != nil {
 		log.Error(err, "failed to reconcile")
 		return reconcile.Result{}, err
 	}
 
-	if !deployed {
-		s = TF_OPERATOR_OBJECT_PENDING
-	}
 	r.updateStatus(instance, s, d)
+	if s == TF_OPERATOR_OBJECT_UPDATING {
+		// we are still in creating stage, reconcile after 15 secs
+		return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
+	}
 	log.Info("reconcile completed: Tungsten CNI " + instance.Name + " Updated")
 	return reconcile.Result{}, nil
 }
@@ -406,7 +296,41 @@ func (r *ReconcileTungstenCNI) updateControllerIPs(cr *tungstenv1alpha1.Tungsten
 	return nil
 }
 
-func (r *ReconcileTungstenCNI) updateStatus(cr *tungstenv1alpha1.TungstenCNI, state string, msg string) error {
+func (r *ReconcileTungstenCNI) updateStage(crOld *tungstenv1alpha1.TungstenCNI, stage string) error {
+	cr := &tungstenv1alpha1.TungstenCNI{}
+	err := r.client.Get(context.TODO(),
+		types.NamespacedName{Namespace: crOld.Namespace, Name: crOld.Name,},
+		cr)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			return err
+		}
+	}
+	if (cr.Status.Stage == stage) {
+		// No update required
+		return nil
+	}
+	cr.Status.Stage = stage
+	err = r.client.Status().Update(context.Background(), cr)
+	if err != nil {
+		log.Error(err, "failed to update TungstenCNI stage")
+		return err
+	}
+	return nil
+}
+
+func (r *ReconcileTungstenCNI) updateStatus(crOld *tungstenv1alpha1.TungstenCNI, state string, msg string) error {
+	cr := &tungstenv1alpha1.TungstenCNI{}
+	err := r.client.Get(context.TODO(),
+		types.NamespacedName{Namespace: crOld.Namespace, Name: crOld.Name,},
+		cr)
+	if err != nil {
+		if apierrors.IsNotFound(err) {
+			// Request object not found, could have been deleted after reconcile request.
+			return err
+		}
+	}
         if (cr.Status.State == state && cr.Status.Error == msg &&
 		cr.Status.ReleaseTag == cr.Spec.ReleaseTag) {
 		// No update required
@@ -415,7 +339,7 @@ func (r *ReconcileTungstenCNI) updateStatus(cr *tungstenv1alpha1.TungstenCNI, st
 	cr.Status.ReleaseTag = cr.Spec.ReleaseTag
 	cr.Status.State = state
 	cr.Status.Error = msg
-	err := r.client.Status().Update(context.TODO(), cr)
+	err = r.client.Status().Update(context.Background(), cr)
 	if err != nil {
 		log.Error(err, "failed to update TungstenCNI status")
 		return err

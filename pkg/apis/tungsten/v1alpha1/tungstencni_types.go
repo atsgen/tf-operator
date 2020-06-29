@@ -63,6 +63,7 @@ type TungstenCNIStatus struct {
 	State string `json:"state,omitempty"`
 	Error string `json:"error,omitempty"`
 	ReleaseTag string `json:"releaseTag,omitempty"`
+	Stage string `json:"stage,omitempty"`
 	Controllers []string `json:"controllers,omitempty"`
 }
 

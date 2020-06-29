@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"os"
 )
 
@@ -42,4 +43,24 @@ func GetKubernetesApiPort() string {
 		return "6443"
 	}
 	return port
+}
+
+func IsOpenShiftMultusEnabled() (bool, error) {
+	status, found := os.LookupEnv(OpenShiftMultusStatusEnvVar)
+	if !found {
+		return false, fmt.Errorf("Does not exist")
+	}
+
+	if status != "enabled" {
+		return false, nil
+	}
+	return true, nil
+}
+
+func SetOpenShiftMultusStatus(enabled bool) {
+	if enabled {
+		os.Setenv(OpenShiftMultusStatusEnvVar, "enabled")
+	} else {
+		os.Setenv(OpenShiftMultusStatusEnvVar, "disabled")
+	}
 }
