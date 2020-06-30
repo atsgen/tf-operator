@@ -42,7 +42,7 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI, node
 	}
 
 	data.Data["K8S_PROVIDER"] = utils.GetKubernetesProvider()
-	data.Data["TFNamespace"] = values.TFNamespace
+	data.Data["TF_NAMESPACE"] = values.TFNamespace
 	data.Data["AAA_MODE"] = "no-auth"
 	data.Data["ADMIN_PASSWORD"] = utils.GetAdminPassword()
 	data.Data["ANALYTICS_ALARM_NODES"] = controllerNodes

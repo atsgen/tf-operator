@@ -3,7 +3,6 @@ package tungstencni
 import (
 	"context"
 	"errors"
-	"strconv"
 
 	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -91,7 +90,6 @@ func FetchNodeList(client client.Client) (*NodeList, error) {
 				}
 			}
 			if ipAddress != "" {
-				log.Info("discovered node: " + node.Name + ", ip: " + ipAddress + ", is master: " + strconv.FormatBool(isMaster))
 				if isMaster {
 					nodeList.MasterNodes[ipAddress] = node.Name
 					if nodeList.DefultApiServer == "" {
