@@ -1,4 +1,4 @@
-package tungstencni
+package sdn
 
 import (
 	"context"
@@ -17,7 +17,7 @@ import (
 	"github.com/atsgen/tf-operator/pkg/values"
 )
 
-func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI) {
+func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.SDN) {
 	switch cr.Spec.IpForwarding {
 	case IPForwardingEnabled:
 		data.Data["KUBERNETES_IP_FABRIC_FORWARDING"] = "true"
@@ -31,7 +31,7 @@ func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.TungstenCN
 	}
 }
 
-func updateContainerInfo(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI) {
+func updateContainerInfo(data *render.RenderData, cr *tungstenv1alpha1.SDN) {
 	data.Data["CONTAINER_REGISTRY"] = utils.GetContainerRegistry()
 	data.Data["CONTAINER_PREFIX"] = utils.GetContainerPrefix()
 	switch cr.Spec.ReleaseTag {
@@ -44,7 +44,7 @@ func updateContainerInfo(data *render.RenderData, cr *tungstenv1alpha1.TungstenC
 	}
 }
 
-func solicitData(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI, nodes *NodeList) {
+func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeList) {
 	var controllerNodes string
 	for ip, _ := range controllerIPs {
 		if controllerNodes == "" {
@@ -128,7 +128,7 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI, node
 	data.Data["KUBERNETES_IP_FABRIC_SUBNETS"] = cr.Spec.IpFabricNetwork.Cidr
 }
 
-func checkAndRenderStage(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.TungstenCNI, data *render.RenderData, stage string) (string, error) {
+func checkAndRenderStage(r *ReconcileSDN, cr *tungstenv1alpha1.SDN, data *render.RenderData, stage string) (string, error) {
 	objs := []*uns.Unstructured{}
 
 	manifests, err := render.RenderDir(filepath.Join("/bindata", "tungsten/", stage), data)
@@ -199,7 +199,7 @@ func checkAndRenderStage(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.TungstenC
 	return TFOperatorObjectDeployed, nil
 }
 
-func renderTungstenFabric(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.TungstenCNI, nodes *NodeList) (string, error) {
+func renderTungstenFabric(r *ReconcileSDN, cr *tungstenv1alpha1.SDN, nodes *NodeList) (string, error) {
 	data := render.MakeRenderData()
 	solicitData(&data, cr, nodes)
 

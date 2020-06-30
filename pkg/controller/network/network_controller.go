@@ -53,7 +53,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 
 	// TODO(user): Modify this to be the types you create that are owned by the primary resource
 	// Watch for changes to secondary resource Pods and requeue the owner Network
-	err = c.Watch(&source.Kind{Type: &tungstenv1alpha1.TungstenCNI{}}, &handler.EnqueueRequestForOwner{
+	err = c.Watch(&source.Kind{Type: &tungstenv1alpha1.SDN{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
 		OwnerType:    &configv1.Network{},
 	})
@@ -112,7 +112,7 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 	}
 
 	// Check if Tungsten CNI installation already exists
-	found := &tungstenv1alpha1.TungstenCNI{}
+	found := &tungstenv1alpha1.SDN{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: values.TFDefaultDeployment,}, found)
 	if err != nil && errors.IsNotFound(err) {
 		if !useTungsten {
@@ -122,7 +122,7 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 		}
 		reqLogger.Info("Creating a new Tungsten CNI", "Name", values.TFDefaultDeployment)
 		// Define a new Tungsten CNI object
-		cni := newTungstenCNI(instance)
+		cni := newSDN(instance)
 
 		err = r.client.Create(context.TODO(), cni)
 		if err != nil {
@@ -185,13 +185,13 @@ func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
 	return nil
 }
 
-// newTungstenCNI returns a new tungsten CNI object
-func newTungstenCNI(cr *configv1.Network) *tungstenv1alpha1.TungstenCNI {
-	cni := &tungstenv1alpha1.TungstenCNI{
+// newSDN returns a new tungsten CNI object
+func newSDN(cr *configv1.Network) *tungstenv1alpha1.SDN {
+	cni := &tungstenv1alpha1.SDN{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      values.TFDefaultDeployment,
 		},
-		Spec: tungstenv1alpha1.TungstenCNISpec{
+		Spec: tungstenv1alpha1.SDNSpec{
 			ReleaseTag:    values.TFReleaseTag,
 			UseVrouter:    true,
 			IpForwarding:  "snat",

@@ -1,5 +1,5 @@
 apiVersion: tungsten.atsgen.com/v1alpha1
-kind: TungstenCNI
+kind: SDN
 metadata:
   name: default
 spec:

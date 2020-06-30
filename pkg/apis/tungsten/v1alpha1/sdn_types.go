@@ -29,8 +29,8 @@ type IpFabricNetworkType struct {
 // +kubebuilder:validation:Enum=snat;enable
 type IpForwardingType string
 
-// Define the desired TungstenCNI deployment parameters
-type TungstenCNISpec struct {
+// Define the desired SDN deployment parameters
+type SDNSpec struct {
 	// release tag for the container images used
 	ReleaseTag string `json:"releaseTag"`
 
@@ -57,8 +57,8 @@ type TungstenCNISpec struct {
 	UseHostNewtorkService bool  `json:"useHostNewtorkService,omitempty"`
 }
 
-// TungstenCNIStatus defines the observed state of TungstenCNI
-type TungstenCNIStatus struct {
+// SDNStatus defines the observed state of SDN
+type SDNStatus struct {
 	// state of deployment
 	State string `json:"state,omitempty"`
 	Error string `json:"error,omitempty"`
@@ -69,29 +69,29 @@ type TungstenCNIStatus struct {
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// TungstenCNI is the Schema for the tungstencnis API
+// SDN is the Schema for the sdns API
 // +kubebuilder:subresource:status
-// +kubebuilder:resource:path=tungstencnis,scope=Cluster
+// +kubebuilder:resource:path=sdns,scope=Cluster
 // +kubebuilder:printcolumn:name="Release",type=string,JSONPath=`.status.releaseTag`
 // +kubebuilder:printcolumn:name="State",type="string",JSONPath=`.status.state`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
-type TungstenCNI struct {
+type SDN struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   TungstenCNISpec   `json:"spec,omitempty"`
-	Status TungstenCNIStatus `json:"status,omitempty"`
+	Spec   SDNSpec   `json:"spec,omitempty"`
+	Status SDNStatus `json:"status,omitempty"`
 }
 
 // +k8s:deepcopy-gen:interfaces=k8s.io/apimachinery/pkg/runtime.Object
 
-// TungstenCNIList contains a list of TungstenCNI
-type TungstenCNIList struct {
+// SDNList contains a list of SDN
+type SDNList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []TungstenCNI `json:"items"`
+	Items           []SDN `json:"items"`
 }
 
 func init() {
-	SchemeBuilder.Register(&TungstenCNI{}, &TungstenCNIList{})
+	SchemeBuilder.Register(&SDN{}, &SDNList{})
 }

@@ -1,7 +1,7 @@
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
-  name: tungstencnis.tungsten.atsgen.com
+  name: sdns.tungsten.atsgen.com
 spec:
   additionalPrinterColumns:
   - JSONPath: .status.releaseTag
@@ -15,16 +15,16 @@ spec:
     type: date
   group: tungsten.atsgen.com
   names:
-    kind: TungstenCNI
-    listKind: TungstenCNIList
-    plural: tungstencnis
-    singular: tungstencni
+    kind: SDN
+    listKind: SDNList
+    plural: sdns
+    singular: sdn
   scope: Cluster
   subresources:
     status: {}
   validation:
     openAPIV3Schema:
-      description: TungstenCNI is the Schema for the tungstencnis API
+      description: SDN is the Schema for the sdns API
       properties:
         apiVersion:
           description: 'APIVersion defines the versioned schema of this representation
@@ -39,7 +39,7 @@ spec:
         metadata:
           type: object
         spec:
-          description: Define the desired TungstenCNI deployment parameters
+          description: Define the desired SDN deployment parameters
           properties:
             clusterName:
               description: cluster name
@@ -85,7 +85,7 @@ spec:
           - releaseTag
           type: object
         status:
-          description: TungstenCNIStatus defines the observed state of TungstenCNI
+          description: SDNStatus defines the observed state of SDN
           properties:
             controllers:
               items:

@@ -1,4 +1,4 @@
-package tungstencni
+package sdn
 
 const (
 	// Operator object state

@@ -1,4 +1,4 @@
-package tungstencni
+package sdn
 
 import (
 	"github.com/atsgen/tf-operator/pkg/utils"

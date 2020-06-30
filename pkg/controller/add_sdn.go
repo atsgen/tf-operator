@@ -1,10 +1,10 @@
 package controller
 
 import (
-	"github.com/atsgen/tf-operator/pkg/controller/tungstencni"
+	"github.com/atsgen/tf-operator/pkg/controller/sdn"
 )
 
 func init() {
 	// AddToManagerFuncs is a list of functions to create controllers and add them to a manager.
-	AddToManagerFuncs = append(AddToManagerFuncs, tungstencni.Add)
+	AddToManagerFuncs = append(AddToManagerFuncs, sdn.Add)
 }

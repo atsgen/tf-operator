@@ -1,4 +1,4 @@
-package tungstencni
+package sdn
 
 import (
 	"context"
@@ -27,11 +27,11 @@ import (
 	"github.com/atsgen/tf-operator/pkg/values"
 )
 
-var log = logf.Log.WithName("controller_tungstencni")
+var log = logf.Log.WithName("controller_sdn")
 
 var controllerIPs map[string]bool = make(map[string]bool)
 
-func (r *ReconcileTungstenCNI) updateOpenShiftMultusStatus() error {
+func (r *ReconcileSDN) updateOpenShiftMultusStatus() error {
 	if !utils.IsOpenShiftCluster() {
 		return nil
 	}
@@ -59,7 +59,7 @@ func (r *ReconcileTungstenCNI) updateOpenShiftMultusStatus() error {
 	return nil
 }
 
-func (r *ReconcileTungstenCNI) deployTungstenFabric(cr *tungstenv1alpha1.TungstenCNI) (string, error) {
+func (r *ReconcileSDN) deployTungstenFabric(cr *tungstenv1alpha1.SDN) (string, error) {
 	nodes, e := FetchNodeList(r.client)
 
 	if e != nil {
@@ -144,7 +144,7 @@ func (r *ReconcileTungstenCNI) deployTungstenFabric(cr *tungstenv1alpha1.Tungste
 	return renderTungstenFabric(r, cr, nodes)
 }
 
-// Add creates a new TungstenCNI Controller and adds it to the Manager. The Manager will set fields on the Controller
+// Add creates a new SDN Controller and adds it to the Manager. The Manager will set fields on the Controller
 // and Start it when the Manager is Started.
 func Add(mgr manager.Manager) error {
 	return add(mgr, newReconciler(mgr))
@@ -152,7 +152,7 @@ func Add(mgr manager.Manager) error {
 
 // newReconciler returns a new reconcile.Reconciler
 func newReconciler(mgr manager.Manager) reconcile.Reconciler {
-	return &ReconcileTungstenCNI{client: mgr.GetClient(),
+	return &ReconcileSDN{client: mgr.GetClient(),
 			scheme: mgr.GetScheme(),
 			recorder: mgr.GetEventRecorderFor("tf-operator")}
 }
@@ -160,13 +160,13 @@ func newReconciler(mgr manager.Manager) reconcile.Reconciler {
 // add adds a new Controller to mgr with r as the reconcile.Reconciler
 func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	// Create a new controller
-	c, err := controller.New("tungstencni-controller", mgr, controller.Options{Reconciler: r})
+	c, err := controller.New("sdn-controller", mgr, controller.Options{Reconciler: r})
 	if err != nil {
 		return err
 	}
 
-	// Watch for changes to primary resource TungstenCNI
-	err = c.Watch(&source.Kind{Type: &tungstenv1alpha1.TungstenCNI{}}, &handler.EnqueueRequestForObject{})
+	// Watch for changes to primary resource SDN
+	err = c.Watch(&source.Kind{Type: &tungstenv1alpha1.SDN{}}, &handler.EnqueueRequestForObject{})
 	if err != nil {
 		return err
 	}
@@ -211,10 +211,10 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	}
 
 	// TODO(user): Modify this to be the types you create that are owned by the primary resource
-	// Watch for changes to secondary resource Pods and requeue the owner TungstenCNI
+	// Watch for changes to secondary resource Pods and requeue the owner SDN
 	err = c.Watch(&source.Kind{Type: &corev1.Pod{}}, &handler.EnqueueRequestForOwner{
 		IsController: true,
-		OwnerType:    &tungstenv1alpha1.TungstenCNI{},
+		OwnerType:    &tungstenv1alpha1.SDN{},
 	})
 	if err != nil {
 		return err
@@ -223,11 +223,11 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 	return nil
 }
 
-// blank assignment to verify that ReconcileTungstenCNI implements reconcile.Reconciler
-var _ reconcile.Reconciler = &ReconcileTungstenCNI{}
+// blank assignment to verify that ReconcileSDN implements reconcile.Reconciler
+var _ reconcile.Reconciler = &ReconcileSDN{}
 
-// ReconcileTungstenCNI reconciles a TungstenCNI object
-type ReconcileTungstenCNI struct {
+// ReconcileSDN reconciles a SDN object
+type ReconcileSDN struct {
 	// This client, initialized using mgr.Client() above, is a split client
 	// that reads objects from the cache and writes to the apiserver
 	client client.Client
@@ -235,16 +235,16 @@ type ReconcileTungstenCNI struct {
 	recorder record.EventRecorder
 }
 
-// Reconcile reads that state of the cluster for a TungstenCNI object and makes changes based on the state read
-// and what is in the TungstenCNI.Spec
+// Reconcile reads that state of the cluster for a SDN object and makes changes based on the state read
+// and what is in the SDN.Spec
 // TODO(user): Modify this Reconcile function to implement your Controller logic.  This example creates
 // a Pod as an example
 // Note:
 // The Controller will requeue the Request to be processed again if the returned error is non-nil or
 // Result.Requeue is true, otherwise upon completion it will remove the work from the queue.
-func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.Result, error) {
-	// Fetch the TungstenCNI instance
-	instance := &tungstenv1alpha1.TungstenCNI{}
+func (r *ReconcileSDN) Reconcile(request reconcile.Request) (reconcile.Result, error) {
+	// Fetch the SDN instance
+	instance := &tungstenv1alpha1.SDN{}
 	err := r.client.Get(context.TODO(), request.NamespacedName, instance)
 	if err != nil {
 		if apierrors.IsNotFound(err) {
@@ -281,20 +281,20 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileTungstenCNI) updateControllerIPs(cr *tungstenv1alpha1.TungstenCNI) error {
+func (r *ReconcileSDN) updateControllerIPs(cr *tungstenv1alpha1.SDN) error {
 	for ip, _ := range controllerIPs {
 		cr.Status.Controllers = append(cr.Status.Controllers, ip)
 	}
 	err := r.client.Status().Update(context.TODO(), cr)
 	if err != nil {
-		log.Error(err, "failed to update TungstenCNI status")
+		log.Error(err, "failed to update SDN status")
 		return err
 	}
 	return nil
 }
 
-func (r *ReconcileTungstenCNI) updateStage(crOld *tungstenv1alpha1.TungstenCNI, stage string) error {
-	cr := &tungstenv1alpha1.TungstenCNI{}
+func (r *ReconcileSDN) updateStage(crOld *tungstenv1alpha1.SDN, stage string) error {
+	cr := &tungstenv1alpha1.SDN{}
 	err := r.client.Get(context.TODO(),
 		types.NamespacedName{Namespace: crOld.Namespace, Name: crOld.Name,},
 		cr)
@@ -311,14 +311,14 @@ func (r *ReconcileTungstenCNI) updateStage(crOld *tungstenv1alpha1.TungstenCNI, 
 	cr.Status.Stage = stage
 	err = r.client.Status().Update(context.Background(), cr)
 	if err != nil {
-		log.Error(err, "failed to update TungstenCNI stage")
+		log.Error(err, "failed to update SDN stage")
 		return err
 	}
 	return nil
 }
 
-func (r *ReconcileTungstenCNI) updateStatus(crOld *tungstenv1alpha1.TungstenCNI, state string, msg string) error {
-	cr := &tungstenv1alpha1.TungstenCNI{}
+func (r *ReconcileSDN) updateStatus(crOld *tungstenv1alpha1.SDN, state string, msg string) error {
+	cr := &tungstenv1alpha1.SDN{}
 	err := r.client.Get(context.TODO(),
 		types.NamespacedName{Namespace: crOld.Namespace, Name: crOld.Name,},
 		cr)
@@ -338,7 +338,7 @@ func (r *ReconcileTungstenCNI) updateStatus(crOld *tungstenv1alpha1.TungstenCNI,
 	cr.Status.Error = msg
 	err = r.client.Status().Update(context.Background(), cr)
 	if err != nil {
-		log.Error(err, "failed to update TungstenCNI status")
+		log.Error(err, "failed to update SDN status")
 		return err
 	}
 	return nil

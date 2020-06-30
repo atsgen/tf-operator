@@ -26,7 +26,7 @@ scripts/initial-setup.sh
 ## Operator-SDK usage
 operator-sdk can be used to add a new api to tf-operator
 ```
-operator-sdk add api --api-version=tungsten.atsgen.com/v1alpha1 --kind TungstenCNI
+operator-sdk add api --api-version=tungsten.atsgen.com/v1alpha1 --kind SDN
 ```
 Trigger following to regenerate k8s and crds after modification of any structure of introduced apis
 ```
@@ -35,7 +35,7 @@ operator-sdk generate crds
 ```
 operator-sdk can be used to add a new api to tf-operator
 ```
-operator-sdk add controller --api-version=tungsten.atsgen.com/v1alpha1 --kind=TungstenCNI
+operator-sdk add controller --api-version=tungsten.atsgen.com/v1alpha1 --kind=SDN
 ```
 
 ## Generate Operator image
@@ -58,7 +58,7 @@ kubectl create -f deploy/namespace.yaml
 kubectl create -f deploy/service_account.yaml
 kubectl create -f deploy/role.yaml
 kubectl create -f deploy/role_binding.yaml
-kubectl create -f deploy/crds/tungsten.atsgen.com_tungstencnis_crd.yaml
+kubectl create -f deploy/crds/tungsten.atsgen.com_sdns_crd.yaml
 # default password set as 'atsgen'
 # user can choose to skip creating secret from here and define
 # there own password using
@@ -71,6 +71,6 @@ tf operator assumes to enable tungsten fabric controller on master nodes only an
 
 Once everything is ready the cluster can be rolled out using
 ```
-kubectl create -f deploy/crds/atsgen.com_v1alpha1_tungstencni_cr.yaml
+kubectl create -f deploy/crds/atsgen.com_v1alpha1_sdn_cr.yaml
 ```
 
