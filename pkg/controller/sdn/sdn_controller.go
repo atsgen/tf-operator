@@ -333,7 +333,7 @@ func (r *ReconcileSDN) updateStatus(crOld *tungstenv1alpha1.SDN, state string, m
 		// No update required
 		return nil
 	}
-	cr.Status.ReleaseTag = cr.Spec.ReleaseTag
+	cr.Status.ReleaseTag = utils.GetReleaseTag(cr.Spec.ReleaseTag)
 	cr.Status.State = state
 	cr.Status.Error = msg
 	err = r.client.Status().Update(context.Background(), cr)

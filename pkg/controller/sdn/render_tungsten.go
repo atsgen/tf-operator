@@ -34,14 +34,7 @@ func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.SDN) {
 func updateContainerInfo(data *render.RenderData, cr *tungstenv1alpha1.SDN) {
 	data.Data["CONTAINER_REGISTRY"] = utils.GetContainerRegistry()
 	data.Data["CONTAINER_PREFIX"] = utils.GetContainerPrefix()
-	switch cr.Spec.ReleaseTag {
-	case "":
-		fallthrough
-	case values.TFReleaseTag:
-		data.Data["CONTAINER_TAG"] = values.TFCurrentRelease
-	default:
-		data.Data["CONTAINER_TAG"] = cr.Spec.ReleaseTag
-	}
+	data.Data["CONTAINER_TAG"] = utils.GetReleaseTag(cr.Spec.ReleaseTag)
 }
 
 func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeList) {

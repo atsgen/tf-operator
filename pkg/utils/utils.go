@@ -3,6 +3,8 @@ package utils
 import (
 	"fmt"
 	"os"
+
+	"github.com/atsgen/tf-operator/pkg/values"
 )
 
 // GetKubernetesProvider returns the K8s provider for this deployment
@@ -93,4 +95,16 @@ func GetContainerPrefix() string {
 		return ContainerPrefixContrail
 	}
 	return prefix
+}
+
+// GetReleaseTag returns the operational release tag give
+// the configured release tag
+func GetReleaseTag(configTag string) string {
+	switch configTag {
+	case "":
+		fallthrough
+	case values.TFReleaseTag:
+		return values.TFCurrentRelease
+	}
+	return configTag
 }
