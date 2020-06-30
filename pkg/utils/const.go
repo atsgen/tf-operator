@@ -26,9 +26,29 @@ const (
 	// is enabled for OpneShift or not
 	OpenShiftMultusStatusEnvVar = "OPENSHIFT_MULTUS"
 
+	// ContainerRegistryEnvVar variable defines the env variable
+	// CONTAINER_REGISTRY, which is used to indicate container registry
+	// to use
+	ContainerRegistryEnvVar = "CONTAINER_REGISTRY"
+
+	// ContainerPrefixEnvVar variable defines the env variable
+	// CONTAINER_PREFIX, which is used to indicate container prefix
+	// to use, this is needed to toggle between tungsten and contrail
+	// will be removed once contrail references are completely removed
+	ContainerPrefixEnvVar = "CONTAINER_PREFIX"
+
 	// OpenShiftProvider - Value for k8s provider as OpenShift
 	OpenShiftProvider = "OpenShift"
 
 	// DefaultAdminPassword - Default value used for password
 	DefaultAdminPassword = "atsgen"
+
+	// DefaultContainerRegistry - default value for container registry
+	DefaultContainerRegistry = "atsgen"
+
+	// ContainerPrefixContrail - images to use contrail as prefix
+	ContainerPrefixContrail = "contrail"
+
+	// ContainerPrefixTungsten - images to use tungsten as prefix
+	ContainerPrefixTungsten = "tungsten"
 )

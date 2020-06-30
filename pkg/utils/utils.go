@@ -68,3 +68,29 @@ func SetOpenShiftMultusStatus(enabled bool) {
 		_ = os.Setenv(OpenShiftMultusStatusEnvVar, "disabled")
 	}
 }
+
+// GetContainerRegistry returns the container registry for this
+// deployment
+func GetContainerRegistry() string {
+	registry, found := os.LookupEnv(ContainerRegistryEnvVar)
+	if !found {
+		return DefaultContainerRegistry
+	}
+
+	return registry
+}
+
+// GetContainerPrefix returns the container prefix to be used
+// for this deployment
+func GetContainerPrefix() string {
+	prefix, found := os.LookupEnv(ContainerPrefixEnvVar)
+	if !found {
+		if IsOpenShiftCluster() {
+			// unless overriden for openshift cluster
+			// we cannot use contrail prefix images
+			return ContainerPrefixTungsten
+		}
+		return ContainerPrefixContrail
+	}
+	return prefix
+}

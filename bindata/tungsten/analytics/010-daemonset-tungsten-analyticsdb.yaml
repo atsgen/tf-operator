@@ -29,13 +29,13 @@ spec:
       hostNetwork: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
           value: "database"
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
+          value: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: tungsten-analyticsdb-config
@@ -48,7 +48,7 @@ spec:
           name: host-var-lib
       containers:
       - name: tungsten-analyticsdb-nodemgr
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -70,7 +70,7 @@ spec:
         - mountPath: /mnt
           name: docker-unix-socket
       - name: tungsten-analyticsdb-provisioner
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -92,7 +92,7 @@ spec:
         - mountPath: /var/log/contrail
           name: analyticsdb-logs
       - name: tungsten-analyticsdb
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-external-cassandra:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-external-cassandra:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
@@ -106,7 +106,7 @@ spec:
         - mountPath: /var/log/cassandra
           name: analyticsdb-logs
       - name: tungsten-analytics-query-engine
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-query-engine:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-analytics-query-engine:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true

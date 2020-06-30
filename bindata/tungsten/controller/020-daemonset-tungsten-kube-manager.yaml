@@ -32,13 +32,13 @@ spec:
       hostNetwork: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
+          value: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -47,7 +47,7 @@ spec:
           name: host-usr-bin
       containers:
       - name: tungsten-kube-manager
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-kubernetes-kube-manager:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-kubernetes-kube-manager:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:

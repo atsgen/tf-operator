@@ -3,7 +3,8 @@ kind: TungstenCNI
 metadata:
   name: default
 spec:
-  releaseTag: R2003-latest
+  # auto picks the latest release supported with this operator
+  releaseTag: auto
   clusterName: k8s
   ipFabricNetwork:
     cidr: 10.64.0.0/12

@@ -32,7 +32,7 @@ spec:
       hostNetwork: true
       containers:
       - name: tungsten-configdb
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-external-cassandra:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-external-cassandra:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
@@ -46,7 +46,7 @@ spec:
         - mountPath: /var/log/cassandra
           name: configdb-logs
       - name: tungsten-config-database-nodemgr
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -71,7 +71,7 @@ spec:
         - mountPath: /mnt
           name: docker-unix-socket
       - name: tungsten-config-database-provisioner
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:

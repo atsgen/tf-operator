@@ -8,9 +8,15 @@ const (
 	TFNamespace            = "tungsten"
 
 	// TFReleaseTag - Default release tag to be used
-	// TODO(prabhjot) need to figure out a better place to handle
-	// upgrade processes with list of backward supported tags
-	TFReleaseTag           = "R2003-latest"
+	// ensure operator uses the latest supported images for this
+	// deployment, ensure upgrade by just upgrading the operator
+	// version
+	TFReleaseTag           = "auto"
+
+	// TFCurrentRelease - current tungsten fabric release this
+	// operator will deploy, if the release tag is TFReleaseTag
+	// or not defined
+	TFCurrentRelease       = "R2003-latest"
 
 	// OpenShiftNetworkConfig - OpenShift network config name
 	OpenShiftNetworkConfig     = "cluster"

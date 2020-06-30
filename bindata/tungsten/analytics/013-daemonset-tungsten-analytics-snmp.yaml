@@ -29,13 +29,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
           value: "analytics-snmp"
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
+          value: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -50,7 +50,7 @@ spec:
           name: host-var-lib
       containers:
       - name: tungsten-analytics-snmp-collector
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-snmp-collector:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-analytics-snmp-collector:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -64,7 +64,7 @@ spec:
         - name: NODE_TYPE
           value: analytics-snmp
       - name: tungsten-analytics-snmp-topology
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-snmp-topology:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-analytics-snmp-topology:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -78,7 +78,7 @@ spec:
         - name: NODE_TYPE
           value: analytics-snmp
       - name: tungsten-analytics-snmp-nodemgr
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -98,7 +98,7 @@ spec:
         - mountPath: /mnt
           name: docker-unix-socket
       - name: tungsten-analytics-snmp-provisioner
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true

@@ -29,13 +29,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
+          value: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -44,7 +44,7 @@ spec:
           name: host-usr-bin
       containers:
       - name: tungsten-analytics-api
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-api:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-analytics-api:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -55,7 +55,7 @@ spec:
         - mountPath: /var/log/contrail
           name: analytics-logs
       - name: tungsten-analytics-collector
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-collector:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-analytics-collector:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -64,7 +64,7 @@ spec:
         - mountPath: /var/log/contrail
           name: analytics-logs
       - name: tungsten-analytics-nodemgr
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -87,7 +87,7 @@ spec:
         - mountPath: /mnt
           name: docker-unix-socket
       - name: tungsten-analytics-provisioner
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:

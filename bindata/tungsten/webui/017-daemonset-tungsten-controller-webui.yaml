@@ -28,13 +28,13 @@ spec:
       hostNetwork: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
         env:
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
+          value: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -43,7 +43,7 @@ spec:
           name: host-usr-bin
       containers:
       - name: tungsten-controller-webui-job
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-controller-webui-job:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-controller-webui-job:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:
@@ -52,7 +52,7 @@ spec:
         - mountPath: /var/log/contrail
           name: webui-logs
       - name: tungsten-controller-webui-web
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-controller-webui-web:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-controller-webui-web:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         envFrom:
         - configMapRef:

@@ -31,7 +31,7 @@ spec:
       hostNetwork: true
       containers:
       - name: config-zookeeper
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-external-zookeeper:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-external-zookeeper:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE

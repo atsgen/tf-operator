@@ -29,13 +29,13 @@ spec:
       shareProcessNamespace: true
       initContainers:
       - name: tungsten-node-init
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-node-init:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-node-init:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         env:
         - name: NODE_TYPE
           value: "analytics-alarm"
         - name: CONTRAIL_STATUS_IMAGE
-          value: "{{ .CONTAINER_REGISTRY }}/contrail-status:{{ .CONTAINER_TAG }}"
+          value: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-status:{{ .CONTAINER_TAG }}"
         envFrom:
         - configMapRef:
             name: env
@@ -50,7 +50,7 @@ spec:
           name: host-var-lib
       containers:
       - name: kafka
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-external-kafka:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-external-kafka:{{ .CONTAINER_TAG }}"
         imagePullPolicy: "IfNotPresent"
         securityContext:
           privileged: true
@@ -65,7 +65,7 @@ spec:
         - configMapRef:
             name: configzookeeperenv
       - name: tungsten-analytics-alarm-gen
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-analytics-alarm-gen:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-analytics-alarm-gen:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -81,7 +81,7 @@ spec:
         - name: NODE_TYPE
           value: analytics-alarm
       - name: tungsten-analytics-alarm-nodemgr
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-nodemgr:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-nodemgr:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true
@@ -101,7 +101,7 @@ spec:
         - mountPath: /mnt
           name: docker-unix-socket
       - name: tungsten-analytics-alarm-provisioner
-        image: "{{ .CONTAINER_REGISTRY }}/contrail-provisioner:{{ .CONTAINER_TAG }}"
+        image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-provisioner:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
         securityContext:
           privileged: true

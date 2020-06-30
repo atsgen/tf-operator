@@ -31,6 +31,19 @@ func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.TungstenCN
 	}
 }
 
+func updateContainerInfo(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI) {
+	data.Data["CONTAINER_REGISTRY"] = utils.GetContainerRegistry()
+	data.Data["CONTAINER_PREFIX"] = utils.GetContainerPrefix()
+	switch cr.Spec.ReleaseTag {
+	case "":
+		fallthrough
+	case values.TFReleaseTag:
+		data.Data["CONTAINER_TAG"] = values.TFCurrentRelease
+	default:
+		data.Data["CONTAINER_TAG"] = cr.Spec.ReleaseTag
+	}
+}
+
 func solicitData(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI, nodes *NodeList) {
 	var controllerNodes string
 	for ip, _ := range controllerIPs {
@@ -55,8 +68,9 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI, node
 	data.Data["CONFIG_API_VIP"] = ""
 	data.Data["CONFIGDB_NODES"] = controllerNodes
 	data.Data["CONFIG_NODES"] = controllerNodes
-	data.Data["CONTAINER_REGISTRY"] = "atsgen"
-	data.Data["CONTAINER_TAG"] = cr.Spec.ReleaseTag
+
+	// update container information
+	updateContainerInfo(data, cr)
 
 	if cr.Spec.ClusterName == "" {
 		data.Data["KUBERNETES_CLUSTER_NAME"] = "k8s"

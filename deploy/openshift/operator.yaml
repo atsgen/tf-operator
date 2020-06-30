@@ -31,6 +31,9 @@ spec:
                   key: password
             - name: K8S_PROVIDER
               value: "OpenShift"
+            # till we move to redhat registry
+            - name: CONTAINER_PREFIX
+              value: "contrail"
             - name: WATCH_NAMESPACE
               value: ""
             - name: POD_NAME
