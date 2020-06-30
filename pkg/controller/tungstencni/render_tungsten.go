@@ -19,10 +19,10 @@ import (
 
 func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI) {
 	switch cr.Spec.IpForwarding {
-	case IP_FORWARDING_ENABLED:
+	case IPForwardingEnabled:
 		data.Data["KUBERNETES_IP_FABRIC_FORWARDING"] = "true"
 		data.Data["KUBERNETES_IP_FABRIC_SNAT"] = "false"
-	case IP_FORWARDING_SNAT:
+	case IPForwardingSnat:
 		data.Data["KUBERNETES_IP_FABRIC_FORWARDING"] = "false"
 		data.Data["KUBERNETES_IP_FABRIC_SNAT"] = "true"
 	default:
@@ -42,7 +42,7 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI, node
 	}
 
 	data.Data["K8S_PROVIDER"] = utils.GetKubernetesProvider()
-	data.Data["TF_NAMESPACE"] = values.TF_NAMESPACE
+	data.Data["TFNamespace"] = values.TFNamespace
 	data.Data["AAA_MODE"] = "no-auth"
 	data.Data["ADMIN_PASSWORD"] = utils.GetAdminPassword()
 	data.Data["ANALYTICS_ALARM_NODES"] = controllerNodes
@@ -74,24 +74,24 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.TungstenCNI, node
 	if utils.IsOpenShiftCluster() {
 		// we don't support building KMOD for openshift
 		data.Data["TUNGSTEN_KMOD"] = "init"
-		data.Data["CNI_BIN_DIR"] = values.OPENSHIFT_CNI_BIN_DIR
+		data.Data["CNI_BIN_DIR"] = values.OpenShiftCniBinDir
 		multusEnabled, _ := utils.IsOpenShiftMultusEnabled()
 		if multusEnabled {
-			data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_MULTUS_CONF_DIR
+			data.Data["CNI_CONF_DIR"] = values.OpenShiftMultusConfDir
 		} else {
-			data.Data["CNI_CONF_DIR"] = values.OPENSHIFT_CNI_CONF_DIR
+			data.Data["CNI_CONF_DIR"] = values.OpenShiftCniConfDir
 		}
 	} else {
 		data.Data["TUNGSTEN_KMOD"] = "build"
-		data.Data["CNI_BIN_DIR"] = values.DEFAULT_CNI_BIN_DIR
-		data.Data["CNI_CONF_DIR"] = values.DEFAULT_CNI_CONF_DIR
+		data.Data["CNI_BIN_DIR"] = values.DefaultCniBinDir
+		data.Data["CNI_CONF_DIR"] = values.DefaultCniConfDir
 	}
 	data.Data["CONTROLLER_NODES"] = controllerNodes
 	data.Data["CONTROL_NODES"] = controllerNodes
 	data.Data["JVM_EXTRA_OPTS"] = "-Xms1g -Xmx2g"
 	data.Data["KAFKA_NODES"] = controllerNodes
-	data.Data["KUBERNETES_API_SECURE_PORT"] = utils.GetKubernetesApiPort()
-	apiServer := utils.GetKubernetesApiServer()
+	data.Data["KUBERNETES_API_SECURE_PORT"] = utils.GetKubernetesAPIPort()
+	apiServer := utils.GetKubernetesAPIServer()
 	if apiServer == "" {
 		apiServer = nodes.DefultApiServer
 	}
@@ -147,11 +147,11 @@ func checkAndRenderStage(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.TungstenC
 			for _, ds := range daemonSets {
 				if ds.Status.DesiredNumberScheduled != ds.Status.NumberAvailable {
 					// we have not reached the required number of nodes
-					return TF_OPERATOR_OBJECT_UPDATING, nil
+					return TFOperatorObjectUpdating, nil
 				}
 			}
 			// all the daemon sets for this stage are up and running
-			return TF_OPERATOR_OBJECT_DEPLOYED, nil
+			return TFOperatorObjectDeployed, nil
 		}
 	}
 
@@ -180,9 +180,9 @@ func checkAndRenderStage(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.TungstenC
 	if waitForRollout(stage) {
 		// let elements roll-out and we will reconcile again to proceed
 		// to the next stage
-		return TF_OPERATOR_OBJECT_UPDATING, nil
+		return TFOperatorObjectUpdating, nil
 	}
-	return TF_OPERATOR_OBJECT_DEPLOYED, nil
+	return TFOperatorObjectDeployed, nil
 }
 
 func renderTungstenFabric(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.TungstenCNI, nodes *NodeList) (string, error) {
@@ -195,7 +195,7 @@ func renderTungstenFabric(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.Tungsten
 	}
 	for stage != "deployed" {
 		status, err := checkAndRenderStage(r, cr, &data, stage)
-		if status == TF_OPERATOR_OBJECT_DEPLOYED {
+		if status == TFOperatorObjectDeployed {
 			// go to next stage
 			stage = getNextStage(stage)
 			r.updateStage(cr, stage)
@@ -203,5 +203,5 @@ func renderTungstenFabric(r *ReconcileTungstenCNI, cr *tungstenv1alpha1.Tungsten
 			return status, err
 		}
 	}
-	return TF_OPERATOR_OBJECT_DEPLOYED, nil
+	return TFOperatorObjectDeployed, nil
 }

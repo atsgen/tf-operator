@@ -100,27 +100,27 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	if instance.Name != values.OPENSHIFT_NETWORK_CONFIG {
+	if instance.Name != values.OpenShiftNetworkConfig {
 		log.Info("skipping OpenShift Network Config name: " + instance.Name)
 		// Return and don't requeue
 		return reconcile.Result{}, nil
 	}
 
 	useTungsten := false
-	if instance.Spec.NetworkType == values.OPENSHIFT_ATSGEN_CNI {
+	if instance.Spec.NetworkType == values.OpenShiftAtsgenCni {
 		useTungsten = true
 	}
 
 	// Check if Tungsten CNI installation already exists
 	found := &tungstenv1alpha1.TungstenCNI{}
-	err = r.client.Get(context.TODO(), types.NamespacedName{Name: values.TF_OPERATOR_CONFIG,}, found)
+	err = r.client.Get(context.TODO(), types.NamespacedName{Name: values.TFDefaultDeployment,}, found)
 	if err != nil && errors.IsNotFound(err) {
 		if !useTungsten {
 			// we are not set as the CNI for OpenShift ignore
 			log.Info("OpenShift is not configured to use Tungsten CNI")
 			return reconcile.Result{}, nil
 		}
-		reqLogger.Info("Creating a new Tungsten CNI", "Name", values.TF_OPERATOR_CONFIG)
+		reqLogger.Info("Creating a new Tungsten CNI", "Name", values.TFDefaultDeployment)
 		// Define a new Tungsten CNI object
 		cni := newTungstenCNI(instance)
 
@@ -162,7 +162,7 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 }
 
 func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
-	if cr.Status.NetworkType == values.OPENSHIFT_ATSGEN_CNI {
+	if cr.Status.NetworkType == values.OpenShiftAtsgenCni {
 		// we don't need to update anything here
 		return nil
 	}
@@ -171,7 +171,7 @@ func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
 	patchFrom := client.MergeFrom(cr.DeepCopy())
 	cr.Status.ClusterNetwork = cr.Spec.ClusterNetwork
 	cr.Status.ServiceNetwork = cr.Spec.ServiceNetwork
-	cr.Status.NetworkType = values.OPENSHIFT_ATSGEN_CNI
+	cr.Status.NetworkType = values.OpenShiftAtsgenCni
 	// TODO(prabhjot) for OpenShift we need to report MTU as per system
 	// capabilities. However, when do VxLAN forwarding to account for tunnel
 	// headers in a default environment we will be reporting 1410 as the MTU
@@ -189,10 +189,10 @@ func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
 func newTungstenCNI(cr *configv1.Network) *tungstenv1alpha1.TungstenCNI {
 	cni := &tungstenv1alpha1.TungstenCNI{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      values.TF_OPERATOR_CONFIG,
+			Name:      values.TFDefaultDeployment,
 		},
 		Spec: tungstenv1alpha1.TungstenCNISpec{
-			ReleaseTag:    values.TF_RELEASE_TAG,
+			ReleaseTag:    values.TFReleaseTag,
 			UseVrouter:    true,
 			IpForwarding:  "snat",
 			UseHostNewtorkService: true,

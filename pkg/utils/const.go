@@ -1,7 +1,7 @@
 package utils
 
 const (
-	// KubernetesProvider variable defines the env variable K8S_PROVIDER
+	// KubernetesProviderEnvVar variable defines the env variable K8S_PROVIDER
 	// which is currently used to indicate operator, if openshift constructs
 	// needs to be enabled
 	KubernetesProviderEnvVar = "K8S_PROVIDER"
@@ -26,9 +26,9 @@ const (
 	// is enabled for OpneShift or not
 	OpenShiftMultusStatusEnvVar = "OPENSHIFT_MULTUS"
 
-	// Value for k8s provider as OpenShift
+	// OpenShiftProvider - Value for k8s provider as OpenShift
 	OpenShiftProvider = "OpenShift"
 
-	// Default value used for password
+	// DefaultAdminPassword - Default value used for password
 	DefaultAdminPassword = "atsgen"
 )

@@ -44,7 +44,7 @@ func (r *ReconcileTungstenCNI) updateOpenShiftMultusStatus() error {
 
 	networkConfig := &ocv1.Network{}
 	err = r.client.Get(context.TODO(),
-		types.NamespacedName{Name: values.OPENSHIFT_NETWORK_CONFIG,},
+		types.NamespacedName{Name: values.OpenShiftNetworkConfig,},
 		networkConfig)
 	if err != nil {
 		log.Info("Failed to fetch openshift network config " + err.Error());
@@ -72,9 +72,9 @@ func (r *ReconcileTungstenCNI) deployTungstenFabric(cr *tungstenv1alpha1.Tungste
 			// return from here we will get notified when a new
 			// node is available
 			r.recorder.Event(cr, corev1.EventTypeNormal,
-				TF_OPERATOR_OBJECT_PENDING,
+				TFOperatorObjectPending,
 				fmt.Sprintf("waiting for master node discovery (got %d/%d)", len(nodes.MasterNodes), 3))
-			return TF_OPERATOR_OBJECT_PENDING, nil
+			return TFOperatorObjectPending, nil
 		}
 		i := 0
 		for ip, _ := range nodes.MasterNodes {
@@ -94,7 +94,7 @@ func (r *ReconcileTungstenCNI) deployTungstenFabric(cr *tungstenv1alpha1.Tungste
 		}
 
 		r.recorder.Event(cr, corev1.EventTypeNormal,
-			TF_OPERATOR_OBJECT_DEPLOYED,
+			TFOperatorObjectDeployed,
 			fmt.Sprintf("Discovered %d controller nodes", len(controllerIPs)))
 	} else {
 		controllerIPs = make(map[string]bool)
@@ -104,9 +104,9 @@ func (r *ReconcileTungstenCNI) deployTungstenFabric(cr *tungstenv1alpha1.Tungste
 		}
 	}
 
-	datapathType := DATAPATH_VPP
+	datapathType := DatapathVpp
 	if cr.Spec.UseVrouter {
-		datapathType = DATAPATH_VROUTER
+		datapathType = DatapathVrouter
 	}
 
 	noLabels := []string{}
@@ -118,12 +118,12 @@ func (r *ReconcileTungstenCNI) deployTungstenFabric(cr *tungstenv1alpha1.Tungste
 		}
 	}
 
-	allLabels := []string{NODE_ROLE_ANALYTICS,
-				NODE_ROLE_ANALYTICS_ALARM,
-				NODE_ROLE_ANALYTICS_SNMP,
-				NODE_ROLE_CONFIG,
-				NODE_ROLE_CONTROL,
-				NODE_ROLE_WEBUI}
+	allLabels := []string{NodeRoleAnalytics,
+				NodeRoleAnalyticsAlarm,
+				NodeRoleAnalyticsSnmp,
+				NodeRoleConfig,
+				NodeRoleControl,
+				NodeRoleWebui}
 	for ip, name := range nodes.MasterNodes {
 		// enable all labels for master nodes
 		if _, found := controllerIPs[ip]; found {
@@ -176,7 +176,7 @@ func add(mgr manager.Manager, r reconcile.Reconciler) error {
 		func(a handler.MapObject) []reconcile.Request {
 			return []reconcile.Request{
 				{NamespacedName: types.NamespacedName{
-					Name:      values.TF_OPERATOR_CONFIG,
+					Name:      values.TFDefaultDeployment,
 				}},
 			}
 		})
@@ -261,11 +261,11 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	s,d := Validate(instance)
-	if s == TF_OPERATOR_OBJECT_IGNORED {
+	if s == TFOperatorObjectIgnored {
 		log.Info("Error!!! Ignoring tf-operator " + request.Name)
 		r.updateStatus(instance, s, d)
 		r.recorder.Event(instance, corev1.EventTypeWarning,
-			TF_OPERATOR_OBJECT_IGNORED, d)
+			TFOperatorObjectIgnored, d)
 		return reconcile.Result{}, nil
 	}
 
@@ -276,7 +276,7 @@ func (r *ReconcileTungstenCNI) Reconcile(request reconcile.Request) (reconcile.R
 	}
 
 	r.updateStatus(instance, s, d)
-	if s == TF_OPERATOR_OBJECT_UPDATING {
+	if s == TFOperatorObjectUpdating {
 		// we are still in creating stage, reconcile after 15 secs
 		return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
 	}

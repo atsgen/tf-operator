@@ -44,16 +44,16 @@ func SetNodeLabels(cl client.Client, nodeName string, labels []string, dType str
 	// delete previous labels
 	delete(newNode.Labels, "node-role.tungsten.io/vpp")
 	delete(newNode.Labels, "node-role.tungsten.io/agent")
-	delete(newNode.Labels, NODE_ROLE_ANALYTICS)
-	delete(newNode.Labels, NODE_ROLE_ANALYTICS_ALARM)
-	delete(newNode.Labels, NODE_ROLE_ANALYTICS_SNMP)
-	delete(newNode.Labels, NODE_ROLE_ANALYTICS_DB)
-	delete(newNode.Labels, NODE_ROLE_CONFIG)
-	delete(newNode.Labels, NODE_ROLE_CONFIG_DB)
-	delete(newNode.Labels, NODE_ROLE_CONTROL)
-	delete(newNode.Labels, NODE_ROLE_WEBUI)
+	delete(newNode.Labels, NodeRoleAnalytics)
+	delete(newNode.Labels, NodeRoleAnalyticsAlarm)
+	delete(newNode.Labels, NodeRoleAnalyticsSnmp)
+	delete(newNode.Labels, NodeRoleAnalyticsDb)
+	delete(newNode.Labels, NodeRoleConfig)
+	delete(newNode.Labels, NodeRoleConfigDb)
+	delete(newNode.Labels, NodeRoleControl)
+	delete(newNode.Labels, NodeRoleWebui)
 
-	newNode.Labels[NODE_ROLE_DATAPATH] = dType
+	newNode.Labels[NodeRoleDatapath] = dType
 	for _,label := range labels {
 		newNode.Labels[label] = ""
 	}

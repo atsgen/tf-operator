@@ -5,6 +5,7 @@ import (
 	"os"
 )
 
+// GetKubernetesProvider returns the K8s provider for this deployment
 func GetKubernetesProvider() string {
 	provider, found := os.LookupEnv(KubernetesProviderEnvVar)
 	if !found {
@@ -15,12 +16,10 @@ func GetKubernetesProvider() string {
 
 // IsOpenShiftCluster returns true if this is a openshift cluster
 func IsOpenShiftCluster() bool {
-	if GetKubernetesProvider() == OpenShiftProvider {
-		return true
-	}
-	return false
+	return (GetKubernetesProvider() == OpenShiftProvider)
 }
 
+// GetAdminPassword returns the admin password supplied by installation process
 func GetAdminPassword() string {
 	password, found := os.LookupEnv(AdminPasswordEnvVar)
 	if !found {
@@ -29,7 +28,8 @@ func GetAdminPassword() string {
 	return password
 }
 
-func GetKubernetesApiServer() string {
+// GetKubernetesAPIServer returns out of cluster configuration for K8S API
+func GetKubernetesAPIServer() string {
 	server, found := os.LookupEnv(KubernetesServiceHostEnvVar)
 	if !found {
 		return ""
@@ -37,7 +37,8 @@ func GetKubernetesApiServer() string {
 	return server
 }
 
-func GetKubernetesApiPort() string {
+// GetKubernetesAPIPort returns K8S API port
+func GetKubernetesAPIPort() string {
 	port, found := os.LookupEnv(KubernetesServicePortEnvVar)
 	if !found {
 		return "6443"
@@ -45,10 +46,11 @@ func GetKubernetesApiPort() string {
 	return port
 }
 
+// IsOpenShiftMultusEnabled returns if multus is enabled
 func IsOpenShiftMultusEnabled() (bool, error) {
 	status, found := os.LookupEnv(OpenShiftMultusStatusEnvVar)
 	if !found {
-		return false, fmt.Errorf("Does not exist")
+		return false, fmt.Errorf("does not exist")
 	}
 
 	if status != "enabled" {
@@ -57,10 +59,12 @@ func IsOpenShiftMultusEnabled() (bool, error) {
 	return true, nil
 }
 
+// SetOpenShiftMultusStatus sets multus status as env variable
+// for consumption later
 func SetOpenShiftMultusStatus(enabled bool) {
 	if enabled {
-		os.Setenv(OpenShiftMultusStatusEnvVar, "enabled")
+		_ = os.Setenv(OpenShiftMultusStatusEnvVar, "enabled")
 	} else {
-		os.Setenv(OpenShiftMultusStatusEnvVar, "disabled")
+		_ = os.Setenv(OpenShiftMultusStatusEnvVar, "disabled")
 	}
 }
