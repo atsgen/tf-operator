@@ -14,7 +14,6 @@ spec:
         name: tf-operator
     spec:
       hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: tf-operator
       containers:
         - name: tf-operator
@@ -33,7 +32,9 @@ spec:
               value: "OpenShift"
             # till we move to redhat registry
             - name: CONTAINER_PREFIX
-              value: "contrail"
+              value: "tungsten"
+            - name: CONTAINER_REGISTRY
+              value: "tungstenops"
             - name: WATCH_NAMESPACE
               value: ""
             - name: POD_NAME

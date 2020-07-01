@@ -16,7 +16,7 @@ const (
 	// TFCurrentRelease - current tungsten fabric release this
 	// operator will deploy, if the release tag is TFReleaseTag
 	// or not defined
-	TFCurrentRelease       = "R2003-latest"
+	TFCurrentRelease       = "R2003-1"
 
 	// OpenShiftNetworkConfig - OpenShift network config name
 	OpenShiftNetworkConfig     = "cluster"

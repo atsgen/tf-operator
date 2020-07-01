@@ -14,7 +14,6 @@ spec:
         name: tf-operator
     spec:
       hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: tf-operator
       containers:
         - name: tf-operator
