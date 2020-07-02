@@ -2,10 +2,14 @@ package network
 
 import (
 	"context"
+	"fmt"
+
+	yaml "github.com/ghodss/yaml"
 
 	configv1 "github.com/openshift/api/config/v1"
 	tungstenv1alpha1 "github.com/atsgen/tf-operator/pkg/apis/tungsten/v1alpha1"
 	"github.com/atsgen/tf-operator/pkg/values"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -120,9 +124,14 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 			log.Info("OpenShift is not configured to use Tungsten CNI")
 			return reconcile.Result{}, nil
 		}
+		clusterName, err := r.getClusterName()
+		if err != nil {
+			log.Info("Failed to get OpenShift cluster name")
+			return reconcile.Result{}, err
+		}
 		reqLogger.Info("Creating a new Tungsten CNI", "Name", values.TFDefaultDeployment)
 		// Define a new Tungsten CNI object
-		cni := newSDN(instance)
+		cni := newSDN(instance, clusterName)
 
 		err = r.client.Create(context.TODO(), cni)
 		if err != nil {
@@ -161,6 +170,29 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 	return reconcile.Result{}, nil
 }
 
+type clusterNameDecoder struct {
+	Metadata struct {
+		Name string `json:"name"`
+	} `json:"metadata"`
+}
+
+func (r *ReconcileNetwork) getClusterName() (string, error) {
+	found := &corev1.ConfigMap{}
+	err := r.client.Get(context.TODO(),
+			types.NamespacedName{
+				Namespace:"kube-system",
+				Name: "cluster-config-v1",},
+			 found)
+	if err != nil {
+		return "", err
+	}
+	cnD := clusterNameDecoder{}
+	if err = yaml.Unmarshal([]byte(found.Data["install-config"]), &cnD); err != nil {
+		return "", fmt.Errorf("Unable to unmarshal install-config, %s", err)
+	}
+	return cnD.Metadata.Name, nil
+}
+
 func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
 	if cr.Status.NetworkType == values.OpenShiftAtsgenCni {
 		// we don't need to update anything here
@@ -186,7 +218,7 @@ func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
 }
 
 // newSDN returns a new tungsten CNI object
-func newSDN(cr *configv1.Network) *tungstenv1alpha1.SDN {
+func newSDN(cr *configv1.Network, clusterName string) *tungstenv1alpha1.SDN {
 	cni := &tungstenv1alpha1.SDN{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      values.TFDefaultDeployment,
@@ -194,6 +226,7 @@ func newSDN(cr *configv1.Network) *tungstenv1alpha1.SDN {
 		Spec: tungstenv1alpha1.SDNSpec{
 			ReleaseTag:    values.TFReleaseTag,
 			CNIConfig: tungstenv1alpha1.CNIConfigType{
+				ClusterName: clusterName,
 				IpForwarding:  "snat",
 				UseHostNewtorkService: true,
 			},
