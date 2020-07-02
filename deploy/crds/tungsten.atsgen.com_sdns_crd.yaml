@@ -41,48 +41,57 @@ spec:
         spec:
           description: Define the desired SDN deployment parameters
           properties:
-            clusterName:
-              description: cluster name
-              type: string
-            ipFabricNetwork:
-              description: ip fabric network parameters
+            cniConfig:
+              description: CNIConfig supplies configuration used for Tungsten Fabric
+                CNI
               properties:
-                cidr:
-                  description: ip fabric network CIDR
+                clusterName:
+                  description: cluster name
                   type: string
+                ipFabricNetwork:
+                  description: ip fabric network parameters
+                  properties:
+                    cidr:
+                      description: ip fabric network CIDR
+                      type: string
+                  type: object
+                ipForwarding:
+                  description: ip fabric forwarding, supported value enable, snat,
+                    where as empty field means ip fabric forwarding disabled
+                  enum:
+                  - snat
+                  - enable
+                  type: string
+                podNetwork:
+                  description: pod network parameters
+                  properties:
+                    cidr:
+                      description: pod network CIDR
+                      type: string
+                  type: object
+                serviceNetwork:
+                  description: service network parameters
+                  properties:
+                    cidr:
+                      description: service network CIDR
+                      type: string
+                  type: object
+                useHostNewtorkService:
+                  description: use host network services
+                  type: boolean
               type: object
-            ipForwarding:
-              description: ip fabric forwarding, supported value enable, snat, where
-                as empty field means ip fabric forwarding disabled
-              enum:
-              - snat
-              - enable
-              type: string
-            podNetwork:
-              description: pod network parameters
+            datapathConfig:
+              description: DatapathConfig supplies configuration for Tungsten Fabric
+                Datapath
               properties:
-                cidr:
-                  description: pod network CIDR
-                  type: string
+                useVrouter:
+                  description: UseVrouter as datpath for CNI
+                  type: boolean
               type: object
             releaseTag:
-              description: release tag for the container images used
+              description: ReleaseTag for the container images used empty release
+                tag would assume automatically move to the latest image tag supported
               type: string
-            serviceNetwork:
-              description: service network parameters
-              properties:
-                cidr:
-                  description: service network CIDR
-                  type: string
-              type: object
-            useHostNewtorkService:
-              description: use host network services
-              type: boolean
-            useVrouter:
-              description: use vrouter as datpath for CNI
-              type: boolean
-          required:
-          - releaseTag
           type: object
         status:
           description: SDNStatus defines the observed state of SDN

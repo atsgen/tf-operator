@@ -29,14 +29,8 @@ type IpFabricNetworkType struct {
 // +kubebuilder:validation:Enum=snat;enable
 type IpForwardingType string
 
-// Define the desired SDN deployment parameters
-type SDNSpec struct {
-	// release tag for the container images used
-	ReleaseTag string `json:"releaseTag"`
-
-	// use vrouter as datpath for CNI
-	UseVrouter bool   `json:"useVrouter,omitempty"`
-
+// CNIConfigType placeholder for Tungsten Fabric CNI configuration
+type CNIConfigType struct {
 	// cluster name
 	ClusterName string  `json:"clusterName,omitempty"`
 
@@ -55,6 +49,25 @@ type SDNSpec struct {
 
 	// use host network services
 	UseHostNewtorkService bool  `json:"useHostNewtorkService,omitempty"`
+}
+
+// DatapathConfigType placeholder for Tungsten Fabric Datapath related config
+type DatapathConfigType struct {
+	// UseVrouter as datpath for CNI
+	UseVrouter bool   `json:"useVrouter,omitempty"`
+}
+
+// Define the desired SDN deployment parameters
+type SDNSpec struct {
+	// ReleaseTag for the container images used empty release tag would
+	// assume automatically move to the latest image tag supported
+	ReleaseTag string `json:"releaseTag,omitempty"`
+
+	// CNIConfig supplies configuration used for Tungsten Fabric CNI
+	CNIConfig CNIConfigType  `json:"cniConfig,omitempty"`
+
+	// DatapathConfig supplies configuration for Tungsten Fabric Datapath
+	DatapathConfig DatapathConfigType `json:"datapathConfig,omitempty"`
 }
 
 // SDNStatus defines the observed state of SDN

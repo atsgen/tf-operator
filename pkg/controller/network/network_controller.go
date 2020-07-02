@@ -193,24 +193,28 @@ func newSDN(cr *configv1.Network) *tungstenv1alpha1.SDN {
 		},
 		Spec: tungstenv1alpha1.SDNSpec{
 			ReleaseTag:    values.TFReleaseTag,
-			UseVrouter:    true,
-			IpForwarding:  "snat",
-			UseHostNewtorkService: true,
+			CNIConfig: tungstenv1alpha1.CNIConfigType{
+				IpForwarding:  "snat",
+				UseHostNewtorkService: true,
+			},
+			DatapathConfig: tungstenv1alpha1.DatapathConfigType{
+				UseVrouter:    true,
+			},
 		},
 	}
 
 	if len(cr.Spec.ClusterNetwork) != 0 {
-		cni.Spec.PodNetwork = tungstenv1alpha1.PodNetworkType{
+		cni.Spec.CNIConfig.PodNetwork = tungstenv1alpha1.PodNetworkType{
 					Cidr: cr.Spec.ClusterNetwork[0].CIDR,
 				}
 		// TODO(prabhjot) need to see how should this actually
 		// work of OpenShift
-		cni.Spec.IpFabricNetwork = tungstenv1alpha1.IpFabricNetworkType{
+		cni.Spec.CNIConfig.IpFabricNetwork = tungstenv1alpha1.IpFabricNetworkType{
 					Cidr: cr.Spec.ClusterNetwork[0].CIDR,
 				}
 	}
 	if len(cr.Spec.ServiceNetwork) != 0 {
-		cni.Spec.ServiceNetwork = tungstenv1alpha1.ServiceNetworkType{
+		cni.Spec.CNIConfig.ServiceNetwork = tungstenv1alpha1.ServiceNetworkType{
 					Cidr: cr.Spec.ServiceNetwork[0],
 				}
 	}

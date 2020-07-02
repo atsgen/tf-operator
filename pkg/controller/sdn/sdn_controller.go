@@ -105,7 +105,7 @@ func (r *ReconcileSDN) deployTungstenFabric(cr *tungstenv1alpha1.SDN) (string, e
 	}
 
 	datapathType := DatapathVpp
-	if cr.Spec.UseVrouter {
+	if cr.Spec.DatapathConfig.UseVrouter {
 		datapathType = DatapathVrouter
 	}
 

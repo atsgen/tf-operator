@@ -17,8 +17,37 @@ import (
 	"github.com/atsgen/tf-operator/pkg/values"
 )
 
-func updateIPForwarding(data *render.RenderData, cr *tungstenv1alpha1.SDN) {
-	switch cr.Spec.IpForwarding {
+func updateCNIInfo(data *render.RenderData, config *tungstenv1alpha1.CNIConfigType) {
+	if config.ClusterName == "" {
+		data.Data["KUBERNETES_CLUSTER_NAME"] = "k8s"
+	} else {
+		data.Data["KUBERNETES_CLUSTER_NAME"] = config.ClusterName
+	}
+
+	if config.UseHostNewtorkService {
+		data.Data["KUBERNETES_HOST_NETWORK_SERVICE"] = "true"
+	} else {
+		data.Data["KUBERNETES_HOST_NETWORK_SERVICE"] = "false"
+	}
+
+	if utils.IsOpenShiftCluster() {
+		data.Data["CNI_BIN_DIR"] = values.OpenShiftCniBinDir
+		multusEnabled, _ := utils.IsOpenShiftMultusEnabled()
+		if multusEnabled {
+			data.Data["CNI_CONF_DIR"] = values.OpenShiftMultusConfDir
+		} else {
+			data.Data["CNI_CONF_DIR"] = values.OpenShiftCniConfDir
+		}
+	} else {
+		data.Data["CNI_BIN_DIR"] = values.DefaultCniBinDir
+		data.Data["CNI_CONF_DIR"] = values.DefaultCniConfDir
+	}
+
+	data.Data["KUBERNETES_POD_SUBNETS"] = config.PodNetwork.Cidr
+	data.Data["KUBERNETES_SERVICE_SUBNETS"] = config.ServiceNetwork.Cidr
+	data.Data["KUBERNETES_IP_FABRIC_SUBNETS"] = config.IpFabricNetwork.Cidr
+
+	switch config.IpForwarding {
 	case IPForwardingEnabled:
 		data.Data["KUBERNETES_IP_FABRIC_FORWARDING"] = "true"
 		data.Data["KUBERNETES_IP_FABRIC_SNAT"] = "false"
@@ -65,33 +94,13 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeL
 	// update container information
 	updateContainerInfo(data, cr)
 
-	if cr.Spec.ClusterName == "" {
-		data.Data["KUBERNETES_CLUSTER_NAME"] = "k8s"
-	} else {
-		data.Data["KUBERNETES_CLUSTER_NAME"] = cr.Spec.ClusterName
-	}
-
-	updateIPForwarding(data, cr)
-	if cr.Spec.UseHostNewtorkService {
-		data.Data["KUBERNETES_HOST_NETWORK_SERVICE"] = "true"
-	} else {
-		data.Data["KUBERNETES_HOST_NETWORK_SERVICE"] = "false"
-	}
+	updateCNIInfo(data, &cr.Spec.CNIConfig)
 
 	if utils.IsOpenShiftCluster() {
 		// we don't support building KMOD for openshift
 		data.Data["TUNGSTEN_KMOD"] = "init"
-		data.Data["CNI_BIN_DIR"] = values.OpenShiftCniBinDir
-		multusEnabled, _ := utils.IsOpenShiftMultusEnabled()
-		if multusEnabled {
-			data.Data["CNI_CONF_DIR"] = values.OpenShiftMultusConfDir
-		} else {
-			data.Data["CNI_CONF_DIR"] = values.OpenShiftCniConfDir
-		}
 	} else {
 		data.Data["TUNGSTEN_KMOD"] = "build"
-		data.Data["CNI_BIN_DIR"] = values.DefaultCniBinDir
-		data.Data["CNI_CONF_DIR"] = values.DefaultCniConfDir
 	}
 	data.Data["CONTROLLER_NODES"] = controllerNodes
 	data.Data["CONTROL_NODES"] = controllerNodes
@@ -116,9 +125,6 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeL
 	data.Data["ZOOKEEPER_PORT"] = "2181"
 	data.Data["ZOOKEEPER_PORTS"] = "2888:3888"
 	data.Data["DPDK_UIO_DRIVER"] = "igb_uio"
-	data.Data["KUBERNETES_POD_SUBNETS"] = cr.Spec.PodNetwork.Cidr
-	data.Data["KUBERNETES_SERVICE_SUBNETS"] = cr.Spec.ServiceNetwork.Cidr
-	data.Data["KUBERNETES_IP_FABRIC_SUBNETS"] = cr.Spec.IpFabricNetwork.Cidr
 }
 
 func checkAndRenderStage(r *ReconcileSDN, cr *tungstenv1alpha1.SDN, data *render.RenderData, stage string) (string, error) {
