@@ -60,6 +60,20 @@ func updateCNIInfo(data *render.RenderData, config *tungstenv1alpha1.CNIConfigTy
 	}
 }
 
+func updateDatapathInfo(data *render.RenderData) {
+	// TODO(prabhjot) some bug with encryption, disable for now
+	data.Data["VROUTER_ENCRYPTION"] = "FALSE"
+	data.Data["VROUTER_GATEWAY"] = ""
+	data.Data["DPDK_UIO_DRIVER"] = "igb_uio"
+
+	if utils.IsOpenShiftCluster() {
+		// we don't support building KMOD for openshift
+		data.Data["TUNGSTEN_KMOD"] = "init"
+	} else {
+		data.Data["TUNGSTEN_KMOD"] = "build"
+	}
+}
+
 func updateContainerInfo(data *render.RenderData, cr *tungstenv1alpha1.SDN) {
 	data.Data["CONTAINER_REGISTRY"] = utils.GetContainerRegistry()
 	data.Data["CONTAINER_PREFIX"] = utils.GetContainerPrefix()
@@ -96,12 +110,8 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeL
 
 	updateCNIInfo(data, &cr.Spec.CNIConfig)
 
-	if utils.IsOpenShiftCluster() {
-		// we don't support building KMOD for openshift
-		data.Data["TUNGSTEN_KMOD"] = "init"
-	} else {
-		data.Data["TUNGSTEN_KMOD"] = "build"
-	}
+	updateDatapathInfo(data)
+
 	data.Data["CONTROLLER_NODES"] = controllerNodes
 	data.Data["CONTROL_NODES"] = controllerNodes
 	data.Data["JVM_EXTRA_OPTS"] = "-Xms1g -Xmx2g"
@@ -119,12 +129,10 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeL
 	data.Data["PHYSICAL_INTERFACE"] = ""
 	data.Data["RABBITMQ_NODE_PORT"] = "5673"
 	data.Data["RABBITMQ_NODES"] = controllerNodes
-	data.Data["VROUTER_GATEWAY"] = ""
 	data.Data["WEBUI_NODES"] = controllerNodes
 	data.Data["WEBUI_VIP"] = ""
 	data.Data["ZOOKEEPER_PORT"] = "2181"
 	data.Data["ZOOKEEPER_PORTS"] = "2888:3888"
-	data.Data["DPDK_UIO_DRIVER"] = "igb_uio"
 }
 
 func checkAndRenderStage(r *ReconcileSDN, cr *tungstenv1alpha1.SDN, data *render.RenderData, stage string) (string, error) {
