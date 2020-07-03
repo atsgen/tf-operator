@@ -16,8 +16,10 @@ COPY build/_output/bin/tf-operator ${OPERATOR}
 
 COPY bindata /bindata
 COPY build/bin /usr/local/bin
-COPY build/licenses /licenses
-RUN  /usr/local/bin/user_setup
+
+RUN mkdir /licenses && \
+    /usr/local/bin/user_setup
+COPY build/license /licenses
 
 ENTRYPOINT ["/usr/local/bin/entrypoint"]
 
