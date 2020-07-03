@@ -30,6 +30,10 @@ spec:
                   key: password
             - name: K8S_PROVIDER
               value: "OpenShift"
+            # as long as the variable is defined we don't care about the value
+            # setting it to true just for indicating the purpose it serve
+            - name: DISABLE_TUNGSTEN_HA
+              value: "true"
             # till we move to redhat registry
             - name: CONTAINER_PREFIX
               value: "tungsten"

@@ -108,3 +108,16 @@ func GetReleaseTag(configTag string) string {
 	}
 	return configTag
 }
+
+// IsTungstenFabricHADisabled returns the status for Tungsten
+// fabric HA configuration
+func IsTungstenFabricHADisabled() bool {
+	_, found := os.LookupEnv(DisableTungstenHAEnvVar)
+	if !found {
+		// currently we support HA only for OpenShift cluster
+		return !IsOpenShiftCluster()
+	}
+	// we don't care the value defined if the environment variable
+	// exists it referes to disabling HA
+	return true
+}

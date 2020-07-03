@@ -37,6 +37,11 @@ const (
 	// will be removed once contrail references are completely removed
 	ContainerPrefixEnvVar = "CONTAINER_PREFIX"
 
+	// DisableTungstenHAEnvVar variable defines the env variable
+	// DISABLE_TUNGSTEN_HA, which is used to indicate disabling of
+	// HA for OpenShift deployment
+	DisableTungstenHAEnvVar = "DISABLE_TUNGSTEN_HA"
+
 	// OpenShiftProvider - Value for k8s provider as OpenShift
 	OpenShiftProvider = "OpenShift"
 

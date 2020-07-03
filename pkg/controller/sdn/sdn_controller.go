@@ -59,6 +59,47 @@ func (r *ReconcileSDN) updateOpenShiftMultusStatus() error {
 	return nil
 }
 
+func getNumControllerIP() int {
+	if utils.IsTungstenFabricHADisabled() {
+		return 1
+	}
+	// we allow only 3 controller nodes for now
+	// TODO(prabhjot) will need to consider making this
+	// configurable/dynamic, possibly based on number of
+	// replicas under install-config:controlPlane in
+	// configmap kube-system:cluster-config-v1
+	return 3
+}
+
+func (r *ReconcileSDN) generateControllerIPList(cr *tungstenv1alpha1.SDN, nodes *NodeList) (string, error) {
+	if len(nodes.MasterNodes) < getNumControllerIP() {
+		// return from here we will get notified when a new
+		// node is available
+		r.recorder.Event(cr, corev1.EventTypeNormal,
+			TFOperatorObjectPending,
+			fmt.Sprintf("waiting for master node discovery (got %d/%d)", len(nodes.MasterNodes), getNumControllerIP()))
+		return TFOperatorObjectPending, nil
+	}
+	i := 0
+	for ip, _ := range nodes.MasterNodes {
+		controllerIPs[ip] = true
+		i++
+		if i == getNumControllerIP() {
+			break
+		}
+	}
+	// commit controller ips to status before going any further
+	err := r.updateControllerIPs(cr)
+	if err != nil {
+		return "", err
+	}
+
+	r.recorder.Event(cr, corev1.EventTypeNormal,
+		TFOperatorObjectDeployed,
+		fmt.Sprintf("Discovered %d controller nodes", len(controllerIPs)))
+	return "", nil
+}
+
 func (r *ReconcileSDN) deployTungstenFabric(cr *tungstenv1alpha1.SDN) (string, error) {
 	nodes, e := FetchNodeList(r.client)
 
@@ -68,34 +109,10 @@ func (r *ReconcileSDN) deployTungstenFabric(cr *tungstenv1alpha1.SDN) (string, e
 
 	// check if we have already identified Controller IPs
 	if len(cr.Status.Controllers) == 0 {
-		if utils.IsOpenShiftCluster() && len(nodes.MasterNodes) < 3 {
-			// return from here we will get notified when a new
-			// node is available
-			r.recorder.Event(cr, corev1.EventTypeNormal,
-				TFOperatorObjectPending,
-				fmt.Sprintf("waiting for master node discovery (got %d/%d)", len(nodes.MasterNodes), 3))
-			return TFOperatorObjectPending, nil
+		str, err := r.generateControllerIPList(cr, nodes)
+		if str != "" || err != nil {
+			return str, err
 		}
-		i := 0
-		for ip, _ := range nodes.MasterNodes {
-			controllerIPs[ip] = true
-			i++
-			// we allow only 3 controller nodes for now
-			// TODO(prabhjot) will need to consider making this
-			// configurable/dynamic
-			if i == 3 {
-				break
-			}
-		}
-		// commit controller ips to status before going any further
-		err := r.updateControllerIPs(cr)
-		if err != nil {
-			return "", err
-		}
-
-		r.recorder.Event(cr, corev1.EventTypeNormal,
-			TFOperatorObjectDeployed,
-			fmt.Sprintf("Discovered %d controller nodes", len(controllerIPs)))
 	} else {
 		controllerIPs = make(map[string]bool)
 		for _, ip := range cr.Status.Controllers {
