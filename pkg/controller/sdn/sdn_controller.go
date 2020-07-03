@@ -285,7 +285,7 @@ func (r *ReconcileSDN) Reconcile(request reconcile.Request) (reconcile.Result, e
 
 	s, err = r.deployTungstenFabric(instance)
 	if err != nil {
-		log.Error(err, "failed to reconcile")
+		log.Info("Failed to reconcile " + err.Error())
 		return reconcile.Result{}, err
 	}
 
@@ -304,7 +304,7 @@ func (r *ReconcileSDN) updateControllerIPs(cr *tungstenv1alpha1.SDN) error {
 	}
 	err := r.client.Status().Update(context.TODO(), cr)
 	if err != nil {
-		log.Error(err, "failed to update SDN status")
+		log.Info("Failed to update controller IP list" + err.Error())
 		return err
 	}
 	return nil
@@ -328,7 +328,7 @@ func (r *ReconcileSDN) updateStage(crOld *tungstenv1alpha1.SDN, stage string) er
 	cr.Status.Stage = stage
 	err = r.client.Status().Update(context.Background(), cr)
 	if err != nil {
-		log.Error(err, "failed to update SDN stage")
+		log.Info("Failed to update SDN stage" + err.Error())
 		return err
 	}
 	return nil
@@ -355,7 +355,7 @@ func (r *ReconcileSDN) updateStatus(crOld *tungstenv1alpha1.SDN, state string, m
 	cr.Status.Error = msg
 	err = r.client.Status().Update(context.Background(), cr)
 	if err != nil {
-		log.Error(err, "failed to update SDN status")
+		log.Info("Failed to update SDN status" + err.Error())
 		return err
 	}
 	return nil
