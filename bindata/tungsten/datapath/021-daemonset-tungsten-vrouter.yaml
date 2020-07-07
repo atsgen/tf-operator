@@ -117,6 +117,8 @@ spec:
         envFrom:
         - configMapRef:
             name: env
+        - configMapRef:
+            name: vrouter-config
         lifecycle:
           preStop:
             exec:

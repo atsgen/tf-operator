@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: vrouter-config
+  namespace: {{ .TF_NAMESPACE }}
+data:
+  VROUTER_ENCRYPTION: "{{ .VROUTER_ENCRYPTION }}"

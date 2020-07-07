@@ -3,6 +3,7 @@ package network
 import (
 	"context"
 	"fmt"
+	"time"
 
 	yaml "github.com/ghodss/yaml"
 
@@ -11,7 +12,6 @@ import (
 	"github.com/atsgen/tf-operator/pkg/values"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -110,54 +110,38 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, nil
 	}
 
-	useTungsten := false
-	if instance.Spec.NetworkType == values.OpenShiftAtsgenCni {
-		useTungsten = true
+	if instance.Spec.NetworkType != values.OpenShiftAtsgenCni {
+		// we are not configured to serve the CNI for OpenShift
+		log.Info("OpenShift is not configured to use Tungsten CNI")
+		return reconcile.Result{}, nil
 	}
 
-	// Check if Tungsten CNI installation already exists
+	// Check if Tungsten SDN exists, we write configuration only to
+	// existing CR
 	found := &tungstenv1alpha1.SDN{}
 	err = r.client.Get(context.TODO(), types.NamespacedName{Name: values.TFDefaultDeployment,}, found)
-	if err != nil && errors.IsNotFound(err) {
-		if !useTungsten {
-			// we are not set as the CNI for OpenShift ignore
-			log.Info("OpenShift is not configured to use Tungsten CNI")
-			return reconcile.Result{}, nil
+	if err != nil {
+		if errors.IsNotFound(err) {
+			log.Info("Default Tungsten Fabric CNI is not available")
+			// Try reconciling again after 15 secs
+			return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
 		}
-		clusterName, err := r.getClusterName()
-		if err != nil {
-			log.Info("Failed to get OpenShift cluster name")
-			return reconcile.Result{}, err
-		}
-		reqLogger.Info("Creating a new Tungsten CNI", "Name", values.TFDefaultDeployment)
-		// Define a new Tungsten CNI object
-		cni := newSDN(instance, clusterName)
-
-		err = r.client.Create(context.TODO(), cni)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		err = r.setNetworkStatus(instance)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
-
-		// CNI created successfully - don't requeue
-		return reconcile.Result{}, nil
-	} else if err != nil {
+		// Error reading Tungsten FAbric default deployment
 		return reconcile.Result{}, err
 	}
 
-	if !useTungsten {
-		// we are not set as the CNI for OpenShift ignore
-		log.Info("OpenShift is not configured to use Tungsten CNI, Deleting")
-		err = r.client.Delete(context.TODO(), found)
-		if err != nil {
-			return reconcile.Result{}, err
-		}
+	clusterName, err := r.getClusterName()
+	if err != nil {
+		log.Info("Failed to get OpenShift cluster name")
+		return reconcile.Result{}, err
+	}
+	reqLogger.Info("Creating a new Tungsten CNI", "Name", values.TFDefaultDeployment)
+	// Update Tungsten CNI object
+	updateSDNConfig(instance, clusterName, found)
 
-		return reconcile.Result{}, nil
+	err = r.client.Update(context.TODO(), found)
+	if err != nil {
+		return reconcile.Result{}, err
 	}
 
 	err = r.setNetworkStatus(instance)
@@ -165,8 +149,7 @@ func (r *ReconcileNetwork) Reconcile(request reconcile.Request) (reconcile.Resul
 		return reconcile.Result{}, err
 	}
 
-	// CNI already exists - don't requeue
-	reqLogger.Info("Skip reconcile: CNI already exists")
+	// CNI created successfully - don't requeue
 	return reconcile.Result{}, nil
 }
 
@@ -204,12 +187,9 @@ func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
 	cr.Status.ClusterNetwork = cr.Spec.ClusterNetwork
 	cr.Status.ServiceNetwork = cr.Spec.ServiceNetwork
 	cr.Status.NetworkType = values.OpenShiftAtsgenCni
-	// TODO(prabhjot) for OpenShift we need to report MTU as per system
-	// capabilities. However, when do VxLAN forwarding to account for tunnel
-	// headers in a default environment we will be reporting 1410 as the MTU
-	// to OpenShift infra. This is small value, but should work in general for
-	// most of the deployments
-	cr.Status.ClusterNetworkMTU = 1410
+	// TODO(prabhjot) for OpenShift we need should report MTU as per system
+	// capabilities.
+	cr.Status.ClusterNetworkMTU = 1500
 	if err := r.client.Patch(context.Background(), cr, patchFrom); err != nil {
 		log.Info("Error patching openshift network status " + err.Error())
 		return err
@@ -217,24 +197,12 @@ func (r *ReconcileNetwork) setNetworkStatus(cr *configv1.Network) error {
 	return nil
 }
 
-// newSDN returns a new tungsten CNI object
-func newSDN(cr *configv1.Network, clusterName string) *tungstenv1alpha1.SDN {
-	cni := &tungstenv1alpha1.SDN{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      values.TFDefaultDeployment,
-		},
-		Spec: tungstenv1alpha1.SDNSpec{
-			ReleaseTag:    values.TFReleaseTag,
-			CNIConfig: tungstenv1alpha1.CNIConfigType{
-				ClusterName: clusterName,
-				IpForwarding:  "snat",
-				UseHostNewtorkService: true,
-			},
-			DatapathConfig: tungstenv1alpha1.DatapathConfigType{
-				UseVrouter:    true,
-			},
-		},
-	}
+// updateSDNConfig updates cni config to given tungsten CNI object
+func updateSDNConfig(cr *configv1.Network, clusterName string, cni *tungstenv1alpha1.SDN) {
+	cni.Spec.CNIConfig.ClusterName = clusterName
+	cni.Spec.CNIConfig.IpForwarding = "snat"
+	cni.Spec.CNIConfig.UseHostNewtorkService = true
+	cni.Spec.DatapathConfig.UseVrouter = true
 
 	if len(cr.Spec.ClusterNetwork) != 0 {
 		cni.Spec.CNIConfig.PodNetwork = tungstenv1alpha1.PodNetworkType{
@@ -251,6 +219,4 @@ func newSDN(cr *configv1.Network, clusterName string) *tungstenv1alpha1.SDN {
 					Cidr: cr.Spec.ServiceNetwork[0],
 				}
 	}
-
-	return cni
 }

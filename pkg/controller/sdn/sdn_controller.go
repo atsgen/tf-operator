@@ -346,7 +346,7 @@ func (r *ReconcileSDN) updateStatus(crOld *tungstenv1alpha1.SDN, state string, m
 		}
 	}
         if (cr.Status.State == state && cr.Status.Error == msg &&
-		cr.Status.ReleaseTag == cr.Spec.ReleaseTag) {
+		cr.Status.ReleaseTag == utils.GetReleaseTag(cr.Spec.ReleaseTag)) {
 		// No update required
 		return nil
 	}

@@ -63,6 +63,9 @@ type SDNSpec struct {
 	// assume automatically move to the latest image tag supported
 	ReleaseTag string `json:"releaseTag,omitempty"`
 
+	// AdminPassword password for Tungsten Fabric Controller admin
+	AdminPassword string `json:"adminPassword,omitempty"`
+
 	// CNIConfig supplies configuration used for Tungsten Fabric CNI
 	CNIConfig CNIConfigType  `json:"cniConfig,omitempty"`
 
