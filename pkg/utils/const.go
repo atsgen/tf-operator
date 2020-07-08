@@ -23,7 +23,7 @@ const (
 
 	// OpenShiftMultusStatusEnvVar variable defines the env variable
 	// OPENSHIFT_MULTUS, which is used to indicate the whether multus
-	// is enabled for OpneShift or not
+	// is enabled for OpenShift or not
 	OpenShiftMultusStatusEnvVar = "OPENSHIFT_MULTUS"
 
 	// ContainerRegistryEnvVar variable defines the env variable
