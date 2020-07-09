@@ -340,7 +340,7 @@ func (r *ReconcileSDN) updateControllerIPs(crOld *tungstenv1alpha1.SDN) error {
 	for ip, _ := range controllerIPs {
 		cr.Status.Controllers = append(cr.Status.Controllers, ip)
 	}
-	err := r.client.Status().Update(context.TODO(), cr)
+	err = r.client.Status().Update(context.TODO(), cr)
 	if err != nil {
 		log.Info("Failed to update controller IP list" + err.Error())
 		return err
