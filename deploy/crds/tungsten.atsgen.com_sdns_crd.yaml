@@ -41,9 +41,19 @@ spec:
         spec:
           description: Define the desired SDN deployment parameters
           properties:
-            adminPassword:
-              description: AdminPassword password for Tungsten Fabric Controller admin
-              type: string
+            adminSecretRef:
+              description: AdminSecretRef reference to secret holding password for
+                Tungsten Fabric Controller admin, if not specified it fallsback to
+                the default Admin Password
+              properties:
+                name:
+                  description: Name reference to Oject secret
+                  type: string
+                namespace:
+                  description: Namespace reference to Oject secret, if empty secret
+                    is assumed to be available in operator namespace
+                  type: string
+              type: object
             cniConfig:
               description: CNIConfig supplies configuration used for Tungsten Fabric
                 CNI

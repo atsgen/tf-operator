@@ -37,6 +37,13 @@ const (
 	// will be removed once contrail references are completely removed
 	ContainerPrefixEnvVar = "CONTAINER_PREFIX"
 
+	// OperatorNamespaceEnvVar variable defines the env variable
+	// OPERATOR_NAMESPACE, which indicates the namespace in which
+	// operator is running, this is internally used as default fallback
+	// for cases where explicit configuration of namespace is not
+	// available
+	OperatorNamespaceEnvVar = "OPERATOR_NAMESPACE"
+
 	// DisableTungstenHAEnvVar variable defines the env variable
 	// DISABLE_TUNGSTEN_HA, which is used to indicate disabling of
 	// HA for OpenShift deployment

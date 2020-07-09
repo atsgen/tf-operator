@@ -21,13 +21,18 @@ func IsOpenShiftCluster() bool {
 	return (GetKubernetesProvider() == OpenShiftProvider)
 }
 
-// GetAdminPassword returns the admin password supplied by installation process
+// GetAdminPassword returns the admin password configured
 func GetAdminPassword() string {
 	password, found := os.LookupEnv(AdminPasswordEnvVar)
 	if !found {
 		return DefaultAdminPassword
 	}
 	return password
+}
+
+// SetAdminPassword sets the admin password for later use
+func SetAdminPassword(password string) {
+	_ = os.Setenv(AdminPasswordEnvVar, password)
 }
 
 // GetKubernetesAPIServer returns out of cluster configuration for K8S API
@@ -120,4 +125,14 @@ func IsTungstenFabricHADisabled() bool {
 	// we don't care the value defined if the environment variable
 	// exists it referes to disabling HA
 	return true
+}
+
+// GetOperatorNamespace returns the namespace in which operator is
+// running
+func GetOperatorNamespace() string {
+	namespace, found := os.LookupEnv(OperatorNamespaceEnvVar)
+	if !found {
+		return ""
+	}
+	return namespace
 }

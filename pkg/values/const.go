@@ -22,7 +22,7 @@ const (
 	OpenShiftNetworkConfig     = "cluster"
 
 	// OpenShiftAtsgenCni - OpenShift Atsgen CNI label
-	OpenShiftAtsgenCni         = "atsgenTungsten"
+	OpenShiftAtsgenCni         = "AtsgenTungsten"
 
 	// DefaultCniBinDir - default cni bin directory for K8s
 	DefaultCniBinDir           = "/opt/cni/bin"

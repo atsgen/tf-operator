@@ -93,11 +93,7 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeL
 	data.Data["K8S_PROVIDER"] = utils.GetKubernetesProvider()
 	data.Data["TF_NAMESPACE"] = values.TFNamespace
 	data.Data["AAA_MODE"] = "no-auth"
-	if cr.Spec.AdminPassword != "" {
-		data.Data["ADMIN_PASSWORD"] = cr.Spec.AdminPassword
-	} else {
-		data.Data["ADMIN_PASSWORD"] = utils.DefaultAdminPassword
-	}
+	data.Data["ADMIN_PASSWORD"] = utils.GetAdminPassword()
 	data.Data["ANALYTICS_ALARM_NODES"] = controllerNodes
 	data.Data["ANALYTICS_API_VIP"] = ""
 	data.Data["ANALYTICSDB_NODES"] = controllerNodes

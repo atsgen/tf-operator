@@ -23,6 +23,7 @@ import (
 
 	ocv1 "github.com/openshift/api/operator/v1"
 
+	tungstenk8s "github.com/atsgen/tf-operator/pkg/k8s"
 	"github.com/atsgen/tf-operator/pkg/utils"
 	"github.com/atsgen/tf-operator/pkg/values"
 )
@@ -98,6 +99,28 @@ func (r *ReconcileSDN) generateControllerIPList(cr *tungstenv1alpha1.SDN, nodes 
 		TFOperatorObjectDeployed,
 		fmt.Sprintf("Discovered %d controller nodes", len(controllerIPs)))
 	return "", nil
+}
+
+func (r *ReconcileSDN) parseAdminPassword(cr *tungstenv1alpha1.SDN) error {
+	if cr.Spec.AdminSecretRef.Name == "" {
+		// no reference to secret nothing set of the password
+		utils.SetAdminPassword("")
+		return nil
+	}
+	namespace := cr.Spec.AdminSecretRef.Namespace
+	if namespace == "" {
+		// switch to operator namespace
+		namespace = utils.GetOperatorNamespace()
+	}
+	password, err := tungstenk8s.GetSecretKey(r.client,
+			types.NamespacedName{Name: cr.Spec.AdminSecretRef.Name,
+						Namespace: namespace,},
+			"password")
+	if err != nil {
+		return err
+	}
+	utils.SetAdminPassword(password)
+	return nil
 }
 
 func (r *ReconcileSDN) deployTungstenFabric(cr *tungstenv1alpha1.SDN) (string, error) {
@@ -283,6 +306,13 @@ func (r *ReconcileSDN) Reconcile(request reconcile.Request) (reconcile.Result, e
 		return reconcile.Result{}, nil
 	}
 
+	err = r.parseAdminPassword(instance)
+	if err != nil {
+		// failed to get configured password, try reconcile after 15 secs
+		log.Info("Failed to get configured password " + err.Error())
+		return reconcile.Result{RequeueAfter: 15 * time.Second}, nil
+	}
+
 	s, err = r.deployTungstenFabric(instance)
 	if err != nil {
 		log.Info("Failed to reconcile " + err.Error())
@@ -298,7 +328,15 @@ func (r *ReconcileSDN) Reconcile(request reconcile.Request) (reconcile.Result, e
 	return reconcile.Result{}, nil
 }
 
-func (r *ReconcileSDN) updateControllerIPs(cr *tungstenv1alpha1.SDN) error {
+func (r *ReconcileSDN) updateControllerIPs(crOld *tungstenv1alpha1.SDN) error {
+	cr := &tungstenv1alpha1.SDN{}
+	err := r.client.Get(context.TODO(),
+		types.NamespacedName{Namespace: crOld.Namespace, Name: crOld.Name,},
+		cr)
+	if err != nil {
+		return err
+	}
+
 	for ip, _ := range controllerIPs {
 		cr.Status.Controllers = append(cr.Status.Controllers, ip)
 	}
@@ -316,10 +354,7 @@ func (r *ReconcileSDN) updateStage(crOld *tungstenv1alpha1.SDN, stage string) er
 		types.NamespacedName{Namespace: crOld.Namespace, Name: crOld.Name,},
 		cr)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			return err
-		}
+		return err
 	}
 	if (cr.Status.Stage == stage) {
 		// No update required
@@ -340,10 +375,7 @@ func (r *ReconcileSDN) updateStatus(crOld *tungstenv1alpha1.SDN, state string, m
 		types.NamespacedName{Namespace: crOld.Namespace, Name: crOld.Name,},
 		cr)
 	if err != nil {
-		if apierrors.IsNotFound(err) {
-			// Request object not found, could have been deleted after reconcile request.
-			return err
-		}
+		return err
 	}
         if (cr.Status.State == state && cr.Status.Error == msg &&
 		cr.Status.ReleaseTag == utils.GetReleaseTag(cr.Spec.ReleaseTag)) {

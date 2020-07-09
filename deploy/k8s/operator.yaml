@@ -22,17 +22,16 @@ spec:
           - tf-operator
           imagePullPolicy: IfNotPresent
           env:
-            - name: ADMIN_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: tungsten-auth
-                  key: password
             - name: WATCH_NAMESPACE
               value: ""
             - name: POD_NAME
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.name
+            - name: OPERATOR_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             - name: OPERATOR_NAME
               value: "tf-operator"
       affinity:
