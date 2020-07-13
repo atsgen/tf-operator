@@ -4,15 +4,15 @@ metadata:
   name: sdns.tungsten.atsgen.com
 spec:
   additionalPrinterColumns:
-  - JSONPath: .status.releaseTag
-    name: Release
-    type: string
-  - JSONPath: .status.state
-    name: State
-    type: string
-  - JSONPath: .metadata.creationTimestamp
-    name: Age
-    type: date
+    - JSONPath: .status.releaseTag
+      name: Release
+      type: string
+    - JSONPath: .status.state
+      name: State
+      type: string
+    - JSONPath: .metadata.creationTimestamp
+      name: Age
+      type: date
   group: tungsten.atsgen.com
   names:
     kind: SDN
@@ -27,14 +27,18 @@ spec:
       description: SDN is the Schema for the sdns API
       properties:
         apiVersion:
-          description: 'APIVersion defines the versioned schema of this representation
-            of an object. Servers should convert recognized schemas to the latest
-            internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+          description: >-
+            APIVersion defines the versioned schema of this representation of an
+            object. Servers should convert recognized schemas to the latest
+            internal value, and may reject unrecognized values. More info:
+            https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources
           type: string
         kind:
-          description: 'Kind is a string value representing the REST resource this
-            object represents. Servers may infer this from the endpoint the client
-            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+          description: >-
+            Kind is a string value representing the REST resource this object
+            represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info:
+            https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds
           type: string
         metadata:
           type: object
@@ -42,21 +46,22 @@ spec:
           description: Define the desired SDN deployment parameters
           properties:
             adminSecretRef:
-              description: AdminSecretRef reference to secret holding password for
-                Tungsten Fabric Controller admin, if not specified it fallsback to
-                the default Admin Password
+              description: >-
+                AdminSecretRef reference to secret holding password for Tungsten
+                Fabric Controller admin, if not specified it fallsback to the
+                default Admin Password
               properties:
                 name:
                   description: Name reference to Oject secret
                   type: string
                 namespace:
-                  description: Namespace reference to Oject secret, if empty secret
-                    is assumed to be available in operator namespace
+                  description: >-
+                    Namespace reference to Oject secret, if empty secret is
+                    assumed to be available in operator namespace
                   type: string
               type: object
             cniConfig:
-              description: CNIConfig supplies configuration used for Tungsten Fabric
-                CNI
+              description: CNIConfig supplies configuration used for Tungsten Fabric CNI
               properties:
                 clusterName:
                   description: cluster name
@@ -69,11 +74,12 @@ spec:
                       type: string
                   type: object
                 ipForwarding:
-                  description: ip fabric forwarding, supported value enable, snat,
-                    where as empty field means ip fabric forwarding disabled
+                  description: >-
+                    ip fabric forwarding, supported value enable, snat, where as
+                    empty field means ip fabric forwarding disabled
                   enum:
-                  - snat
-                  - enable
+                    - snat
+                    - enable
                   type: string
                 podNetwork:
                   description: pod network parameters
@@ -94,7 +100,8 @@ spec:
                   type: boolean
               type: object
             datapathConfig:
-              description: DatapathConfig supplies configuration for Tungsten Fabric
+              description: >-
+                DatapathConfig supplies configuration for Tungsten Fabric
                 Datapath
               properties:
                 useVrouter:
@@ -102,8 +109,9 @@ spec:
                   type: boolean
               type: object
             releaseTag:
-              description: ReleaseTag for the container images used empty release
-                tag would assume automatically move to the latest image tag supported
+              description: >-
+                ReleaseTag for the container images used empty release tag would
+                assume automatically move to the latest image tag supported
               type: string
           type: object
         status:
@@ -126,6 +134,6 @@ spec:
       type: object
   version: v1alpha1
   versions:
-  - name: v1alpha1
-    served: true
-    storage: true
+    - name: v1alpha1
+      served: true
+      storage: true

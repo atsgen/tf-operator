@@ -57,14 +57,26 @@ type DatapathConfigType struct {
 	UseVrouter bool   `json:"useVrouter,omitempty"`
 }
 
+type AdminSecretType struct {
+	// Name reference to Oject secret
+	Name string `json:"name,omitempty"`
+
+	// Namespace reference to Oject secret,
+	// if empty secret is assumed to be available in operator
+	// namespace
+	Namespace string `json:"namespace,omitempty"`
+}
+
 // Define the desired SDN deployment parameters
 type SDNSpec struct {
 	// ReleaseTag for the container images used empty release tag would
 	// assume automatically move to the latest image tag supported
 	ReleaseTag string `json:"releaseTag,omitempty"`
 
-	// AdminPassword password for Tungsten Fabric Controller admin
-	AdminPassword string `json:"adminPassword,omitempty"`
+	// AdminSecretRef reference to secret holding password for Tungsten
+	// Fabric Controller admin, if not specified it fallsback to the
+	// default Admin Password
+	AdminSecretRef AdminSecretType `json:"adminSecretRef,omitempty"`
 
 	// CNIConfig supplies configuration used for Tungsten Fabric CNI
 	CNIConfig CNIConfigType  `json:"cniConfig,omitempty"`
