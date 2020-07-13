@@ -8,47 +8,47 @@ import (
 )
 
 func TestGetAdminPassword( t *testing.T ) {
-     testPass := utils.GetAdminPassword()
-     if testPass != utils.DefaultAdminPassword {
-        t.Errorf("FAILED")
-     }
+        testPass := utils.GetAdminPassword()
+        if testPass != utils.DefaultAdminPassword {
+                t.Errorf("FAILED")
+        }
 }
 
 func TestGetKubernetesAPIServer( t *testing.T ) {
-    os.Setenv("KUBERNETES_SERVICE_HOST",  "test")
-    testHost := utils.GetKubernetesAPIServer()
-    if testHost!="test" { 
-        t.Errorf("FAILED")
-    }
+        os.Setenv("KUBERNETES_SERVICE_HOST",  "test")
+        testHost := utils.GetKubernetesAPIServer()
+        if testHost!="test" { 
+                t.Errorf("FAILED")
+        }  
 }
 
 func TestGetContainerRegistry( t *testing.T ) {
-    os.Setenv("CONTAINER_REGISTRY", "test")
-    testRegistry := utils.GetContainerRegistry() 
-    if testRegistry!="test" {
-        t.Errorf("FAILED")
-    }
+        os.Setenv("CONTAINER_REGISTRY", "test")
+        testRegistry := utils.GetContainerRegistry() 
+        if testRegistry!="test" {
+                t.Errorf("FAILED")
+        }  
 }
 
 func TestGetContainerPrefix( t *testing.T ) {
-    testPrefix := utils.GetContainerPrefix()
-    if testPrefix != utils.ContainerPrefixContrail {
-        t.Errorf("FAILED")
-    }
+        testPrefix := utils.GetContainerPrefix()
+        if testPrefix != utils.ContainerPrefixContrail {
+                t.Errorf("FAILED")
+        }
 }
  
 func TestGetReleaseTag ( t *testing.T ) {
-    testTag :=  utils.GetReleaseTag("auto")
-    if testTag != values.TFCurrentRelease {    
-        t.Errorf("FAILED")
-    }
+        testTag :=  utils.GetReleaseTag("auto")
+        if testTag != values.TFCurrentRelease {    
+                t.Errorf("FAILED")
+        }
 }
 
 func TestGetKubernetesAPIPort( t *testing.T ) {
-    testPort := utils.GetKubernetesAPIPort() 
-    if testPort != "6443" {
-        t.Errorf("FAILED")
-    }
+        testPort := utils.GetKubernetesAPIPort() 
+        if testPort != "6443" {
+                t.Errorf("FAILED")
+        }
 }
 
 
