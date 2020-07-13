@@ -136,3 +136,16 @@ func GetOperatorNamespace() string {
 	}
 	return namespace
 }
+
+// IsResourceHackDisabled returns the status for resource hack for limiting
+// the ram usage
+func IsResourceHackDisabled() string {
+	_, found := os.LookupEnv(DisableResourceHackEnvVar)
+	if !found {
+		return FalseStr
+	}
+
+	// we don't care the value, if the env variable is define
+	// it referes to disabling the resource limit hack
+	return TrueStr
+}

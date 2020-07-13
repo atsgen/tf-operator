@@ -49,6 +49,11 @@ const (
 	// HA for OpenShift deployment
 	DisableTungstenHAEnvVar = "DISABLE_TUNGSTEN_HA"
 
+	// DisableResourceHackEnvVar variable defines the env variable
+	// DISABLE_RESOURCE_HACK, which is used to indicate disabling of
+	// Hack/Work-arround for resource configuration
+	DisableResourceHackEnvVar = "DISABLE_RESOURCE_HACK"
+
 	// OpenShiftProvider - Value for k8s provider as OpenShift
 	OpenShiftProvider = "OpenShift"
 
@@ -63,4 +68,10 @@ const (
 
 	// ContainerPrefixTungsten - images to use tungsten as prefix
 	ContainerPrefixTungsten = "tungsten"
+
+	// TrueStr - string value for true
+	TrueStr = "true"
+
+	// FalseStr - string value for false
+	FalseStr = "false"
 )

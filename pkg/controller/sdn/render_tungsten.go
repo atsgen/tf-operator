@@ -105,6 +105,8 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeL
 	data.Data["CONFIGDB_NODES"] = controllerNodes
 	data.Data["CONFIG_NODES"] = controllerNodes
 
+	data.Data["DISABLE_RESOURCE_HACK"] = utils.IsResourceHackDisabled()
+
 	// update container information
 	updateContainerInfo(data, cr)
 

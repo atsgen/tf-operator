@@ -57,6 +57,17 @@ spec:
       - name: tungsten-analytics-collector
         image: "{{ .CONTAINER_REGISTRY }}/{{ .CONTAINER_PREFIX }}-analytics-collector:{{ .CONTAINER_TAG }}"
         imagePullPolicy: ""
+{{- if eq .DISABLE_RESOURCE_HACK "false"}}
+        resources:
+          # we do not have a precise value here, realistically this needs to
+          # be handled appropriately by the process itself.
+          # for the time being ensure that we are not starving other processes
+          # on the node, this needs better handling
+          limits:
+            memory: "4Gi"
+          requests:
+            memory: "128Mi"
+{{- end}}
         envFrom:
         - configMapRef:
             name: env
