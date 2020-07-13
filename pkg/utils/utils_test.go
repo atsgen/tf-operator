@@ -17,17 +17,17 @@ func TestGetAdminPassword( t *testing.T ) {
 func TestGetKubernetesAPIServer( t *testing.T ) {
         os.Setenv("KUBERNETES_SERVICE_HOST",  "test")
         testHost := utils.GetKubernetesAPIServer()
-        if testHost!="test" { 
+        if testHost!="test" {
                 t.Errorf("FAILED")
-        }  
+        }
 }
 
 func TestGetContainerRegistry( t *testing.T ) {
         os.Setenv("CONTAINER_REGISTRY", "test")
-        testRegistry := utils.GetContainerRegistry() 
+        testRegistry := utils.GetContainerRegistry()
         if testRegistry!="test" {
                 t.Errorf("FAILED")
-        }  
+        }
 }
 
 func TestGetContainerPrefix( t *testing.T ) {
@@ -36,19 +36,26 @@ func TestGetContainerPrefix( t *testing.T ) {
                 t.Errorf("FAILED")
         }
 }
- 
+
 func TestGetReleaseTag ( t *testing.T ) {
         testTag :=  utils.GetReleaseTag("auto")
-        if testTag != values.TFCurrentRelease {    
+        if testTag != values.TFCurrentRelease {
                 t.Errorf("FAILED")
         }
 }
 
 func TestGetKubernetesAPIPort( t *testing.T ) {
-        testPort := utils.GetKubernetesAPIPort() 
+        testPort := utils.GetKubernetesAPIPort()
         if testPort != "6443" {
                 t.Errorf("FAILED")
         }
 }
 
+func TestGetOperatorNamespace( t *testing.T ) {
+        os.Setenv("OPERATOR_NAMESPACE", "test")
+        testNamespace := utils.GetOperatorNamespace()
+        if testNamespace!="test" {
+                t.Errorf("FAILED")
+        }
+}
 
