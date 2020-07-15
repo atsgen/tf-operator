@@ -54,23 +54,23 @@ operator-sdk build atsgen/tf-operator:v0.0.1
 initialise and run tf-operator
 ```
 # assumed to be executed from within the top level of repo
-kubectl create -f deploy/namespace.yaml
-kubectl create -f deploy/service_account.yaml
-kubectl create -f deploy/role.yaml
-kubectl create -f deploy/role_binding.yaml
 kubectl create -f deploy/crds/tungsten.atsgen.com_sdns_crd.yaml
+kubectl create -f deploy/01-tf-namespace.yaml
 # default password set as 'atsgen'
 # user can choose to skip creating secret from here and define
 # there own password using
 # kubectl create secret generic -n atsgen tungsten-auth --from-literal=password='atsgen'
-kubectl create -f deploy/secret.yaml
-kubectl create -f deploy/k8s/operator.yaml
+kubectl create -f deploy/02-tf-secret.yaml
+kubectl create -f deploy/03-tf-service_account.yaml
+kubectl create -f deploy/04-tf-role.yaml
+kubectl create -f deploy/05-tf-role_binding.yaml
+kubectl create -f deploy/k8s/06-tf-operator.yaml
 ```
 
 tf operator assumes to enable tungsten fabric controller on master nodes only and vrouter on all the nodes.
 
 Once everything is ready the cluster can be rolled out using
 ```
-kubectl create -f deploy/crds/atsgen.com_v1alpha1_sdn_cr.yaml
+kubectl create -f deploy/k8s/sample-deploy.yaml
 ```
 

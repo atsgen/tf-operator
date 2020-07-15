@@ -1,0 +1,17 @@
+apiVersion: tungsten.atsgen.com/v1alpha1
+kind: SDN
+metadata:
+  name: default
+spec:
+  cniConfig:
+    clusterName: k8s
+    ipFabricNetwork:
+      cidr: 10.64.0.0/12
+    podNetwork:
+      cidr: 10.32.0.0/12
+    serviceNetwork:
+      cidr: 10.96.0.0/12
+    ipForwarding: snat
+    useHostNewtorkService: true
+  datapathConfig:
+    useVrouter: true
