@@ -17,7 +17,7 @@ spec:
       serviceAccountName: tf-operator
       containers:
         - name: tf-operator
-          image: atsgen/tf-operator:v0.0.1
+          image: registry.connect.redhat.com/atsgen/tf-operator:v0.0.1
           command:
           - tf-operator
           - "--url-only-kubeconfig=/etc/kubernetes/kubeconfig"
@@ -25,11 +25,8 @@ spec:
           env:
             - name: K8S_PROVIDER
               value: "OpenShift"
-            # till we move to redhat registry
-            - name: CONTAINER_PREFIX
-              value: "tungsten"
             - name: CONTAINER_REGISTRY
-              value: "tungstenops"
+              value: "registry.connect.redhat.com/atsgen"
             - name: WATCH_NAMESPACE
               value: ""
             - name: POD_NAME
