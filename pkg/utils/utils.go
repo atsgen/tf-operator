@@ -31,8 +31,16 @@ func GetAdminPassword() string {
 }
 
 // SetAdminPassword sets the admin password for later use
+// in case the password provided is empty string, function
+// unset the environment variable
 func SetAdminPassword(password string) {
-	_ = os.Setenv(AdminPasswordEnvVar, password)
+	if password == "" {
+		// when no password provided unset the env variable
+		// allowing the logic for default password to kick in
+		_ = os.Unsetenv(AdminPasswordEnvVar)
+	} else {
+		_ = os.Setenv(AdminPasswordEnvVar, password)
+	}
 }
 
 // GetKubernetesAPIServer returns out of cluster configuration for K8S API
