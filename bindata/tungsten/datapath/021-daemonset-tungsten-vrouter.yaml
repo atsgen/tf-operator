@@ -135,8 +135,6 @@ spec:
         - mountPath: /usr/src
           name: usr-src
 {{- if eq .K8S_PROVIDER "OpenShift"}}
-        - mountPath: /host/modules
-          name: lib-modules
         - mountPath: /tungsten/modules
           name: tungsten-modules
 {{- else}}
