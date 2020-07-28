@@ -1,51 +1,9 @@
-<<<<<<< HEAD
-package utils_test
-=======
 package utils
->>>>>>> cfe3c72726bf1d76bbae6391e90b50a4cc933bf1
 
 import (
         "testing"
         "os"
         "github.com/atsgen/tf-operator/pkg/values"
-<<<<<<< HEAD
-        "github.com/atsgen/tf-operator/pkg/utils"
-)
-
-func TestGetAdminPassword( t *testing.T ) {
-        testPass := utils.GetAdminPassword()
-        if testPass != utils.DefaultAdminPassword {
-                t.Errorf("FAILED")
-        }
-}
-
-func TestGetKubernetesAPIServer( t *testing.T ) {
-        os.Setenv("KUBERNETES_SERVICE_HOST",  "test")
-        testHost := utils.GetKubernetesAPIServer()
-        if testHost!="test" { 
-                t.Errorf("FAILED")
-        }  
-}
-
-func TestGetContainerRegistry( t *testing.T ) {
-        os.Setenv("CONTAINER_REGISTRY", "test")
-        testRegistry := utils.GetContainerRegistry() 
-        if testRegistry!="test" {
-                t.Errorf("FAILED")
-        }  
-}
-
-func TestGetContainerPrefix( t *testing.T ) {
-        testPrefix := utils.GetContainerPrefix()
-        if testPrefix != utils.ContainerPrefixContrail {
-                t.Errorf("FAILED")
-        }
-}
- 
-func TestGetReleaseTag ( t *testing.T ) {
-        testTag :=  utils.GetReleaseTag("auto")
-        if testTag != values.TFCurrentRelease {    
-=======
 )
 
 // Trying to set a value and check for its functionality 
@@ -62,6 +20,31 @@ func TestAdminPassword( t *testing.T ) {
         os.Unsetenv(AdminPasswordEnvVar)
 }
 
+// Testing for the K8S provider for the deployment
+func TestGetKubernetesProvider( t *testing.T ) {
+        sampleProvider := GetKubernetesProvider()
+        os.Setenv(KubernetesProviderEnvVar, "test")
+        testProvider := GetKubernetesProvider()
+        if (IsOpenShiftCluster() || (testProvider != "test") || (sampleProvider != "")) {
+                t.Errorf("FAILED")
+        }
+        // Removing the set value
+        os.Unsetenv(KubernetesProviderEnvVar)
+}
+
+// Checking the status of multus
+func TestOpenShiftMultus( t *testing.T ) {
+        sampleMultus, _ := IsOpenShiftMultusEnabled()
+        SetOpenShiftMultusStatus(true)
+        testMultus, _ := IsOpenShiftMultusEnabled()
+        SetOpenShiftMultusStatus(false)
+        falseMultus, _ := IsOpenShiftMultusEnabled()
+        if ((sampleMultus != false) || (testMultus != true) || (falseMultus != false)) {
+                t.Errorf("FAILED")
+        }
+        os.Unsetenv(OpenShiftMultusStatusEnvVar)
+}
+ 
 // Testing for the return of out of cluster configuration for K8S API
 func TestGetKubernetesAPIServer( t *testing.T ) {
         sampleHost := GetKubernetesAPIServer()
@@ -101,20 +84,10 @@ func TestGetReleaseTag ( t *testing.T ) {
         testTag := GetReleaseTag("")
         configTag := GetReleaseTag("test")
         if ((testTag != values.TFCurrentRelease) || (configTag != "test")) {
->>>>>>> cfe3c72726bf1d76bbae6391e90b50a4cc933bf1
                 t.Errorf("FAILED")
         }
 }
 
-<<<<<<< HEAD
-func TestGetKubernetesAPIPort( t *testing.T ) {
-        testPort := utils.GetKubernetesAPIPort() 
-        if testPort != "6443" {
-                t.Errorf("FAILED")
-        }
-}
-
-=======
 // Checking for K8S API port
 func TestGetKubernetesAPIPort( t *testing.T ) {
         defPort := GetKubernetesAPIPort()
@@ -124,6 +97,22 @@ func TestGetKubernetesAPIPort( t *testing.T ) {
                 t.Errorf("FAILED")
         }
         os.Unsetenv(KubernetesServicePortEnvVar)
+}
+
+// Testing for Tungstenfabric HA status 
+func TestTungstenFabricHADisablility( t *testing.T ) {
+        os.Setenv(KubernetesProviderEnvVar, "OpenShift")
+        sampleHa := IsTungstenFabricHADisabled()
+        // Whatever the environment variable value is 
+        // HA is disabled
+        os.Setenv(DisableTungstenHAEnvVar, "test")
+        testHa := IsTungstenFabricHADisabled()
+        // Currently HA is supported only for OpenShift cluster
+        if ((testHa != true) || (sampleHa != false)) {
+                t.Errorf("FAILED")
+        }
+        os.Unsetenv(DisableTungstenHAEnvVar)
+        os.Unsetenv(KubernetesProviderEnvVar)
 }
 
 // Testing for the namespace in which operator is running
@@ -136,5 +125,16 @@ func TestGetOperatorNamespace( t *testing.T ) {
         }
         os.Unsetenv(OperatorNamespaceEnvVar)
 }
->>>>>>> cfe3c72726bf1d76bbae6391e90b50a4cc933bf1
 
+// Testing for resource hack
+func TestResourceHack( t *testing.T ) {
+        testHack := IsResourceHackDisabled()
+        // Irrespective of the environment variable value
+        // if it is defined, resource hack is disabled
+        os.Setenv(DisableResourceHackEnvVar, "test")
+        trueHack := IsResourceHackDisabled()
+        if ((testHack != FalseStr) || (trueHack != TrueStr)) {
+                t.Errorf("FAILED")
+        }
+        os.Unsetenv(DisableResourceHackEnvVar)
+}
