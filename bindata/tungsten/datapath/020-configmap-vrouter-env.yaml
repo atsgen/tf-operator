@@ -4,4 +4,6 @@ metadata:
   name: vrouter-config
   namespace: {{ .TF_NAMESPACE }}
 data:
+  DPDK_UIO_DRIVER: {{ .DPDK_UIO_DRIVER }}
   VROUTER_ENCRYPTION: "{{ .VROUTER_ENCRYPTION }}"
+  VROUTER_GATEWAY: {{ .VROUTER_GATEWAY }}

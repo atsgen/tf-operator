@@ -88,6 +88,8 @@ spec:
         envFrom:
         - configMapRef:
             name: env
+        - configMapRef:
+            name: kube-manager-config
         volumeMounts:
         - mountPath: /var/lib/contrail
           name: var-lib-contrail
