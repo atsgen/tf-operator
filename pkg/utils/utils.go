@@ -153,7 +153,7 @@ func IsResourceHackDisabled() string {
 		return FalseStr
 	}
 
-	// we don't care the value, if the env variable is define
-	// it referes to disabling the resource limit hack
+	// we don't care the value, if the env variable is defined
+	// it refers to disabling the resource limit hack
 	return TrueStr
 }

@@ -20,6 +20,31 @@ func TestAdminPassword( t *testing.T ) {
         os.Unsetenv(AdminPasswordEnvVar)
 }
 
+// Testing for the K8S provider for the deployment
+func TestGetKubernetesProvider( t *testing.T ) {
+        sampleProvider := GetKubernetesProvider()
+        os.Setenv(KubernetesProviderEnvVar, "test")
+        testProvider := GetKubernetesProvider()
+        if (IsOpenShiftCluster() || (testProvider != "test") || (sampleProvider != "")) {
+                t.Errorf("FAILED")
+        }
+        // Removing the set value
+        os.Unsetenv(KubernetesProviderEnvVar)
+}
+
+// Checking the status of multus
+func TestOpenShiftMultus( t *testing.T ) {
+        sampleMultus, _ := IsOpenShiftMultusEnabled()
+        SetOpenShiftMultusStatus(true)
+        testMultus, _ := IsOpenShiftMultusEnabled()
+        SetOpenShiftMultusStatus(false)
+        falseMultus, _ := IsOpenShiftMultusEnabled()
+        if ((sampleMultus != false) || (testMultus != true) || (falseMultus != false)) {
+                t.Errorf("FAILED")
+        }
+        os.Unsetenv(OpenShiftMultusStatusEnvVar)
+}
+ 
 // Testing for the return of out of cluster configuration for K8S API
 func TestGetKubernetesAPIServer( t *testing.T ) {
         sampleHost := GetKubernetesAPIServer()
@@ -74,6 +99,22 @@ func TestGetKubernetesAPIPort( t *testing.T ) {
         os.Unsetenv(KubernetesServicePortEnvVar)
 }
 
+// Testing for Tungstenfabric HA status 
+func TestTungstenFabricHADisablility( t *testing.T ) {
+        os.Setenv(KubernetesProviderEnvVar, "OpenShift")
+        sampleHa := IsTungstenFabricHADisabled()
+        // Whatever the environment variable value is 
+        // HA is disabled
+        os.Setenv(DisableTungstenHAEnvVar, "test")
+        testHa := IsTungstenFabricHADisabled()
+        // Currently HA is supported only for OpenShift cluster
+        if ((testHa != true) || (sampleHa != false)) {
+                t.Errorf("FAILED")
+        }
+        os.Unsetenv(DisableTungstenHAEnvVar)
+        os.Unsetenv(KubernetesProviderEnvVar)
+}
+
 // Testing for the namespace in which operator is running
 func TestGetOperatorNamespace( t *testing.T ) {
         sampleNamespace := GetOperatorNamespace()
@@ -85,3 +126,15 @@ func TestGetOperatorNamespace( t *testing.T ) {
         os.Unsetenv(OperatorNamespaceEnvVar)
 }
 
+// Testing for resource hack
+func TestResourceHack( t *testing.T ) {
+        testHack := IsResourceHackDisabled()
+        // Irrespective of the environment variable value
+        // if it is defined, resource hack is disabled
+        os.Setenv(DisableResourceHackEnvVar, "test")
+        trueHack := IsResourceHackDisabled()
+        if ((testHack != FalseStr) || (trueHack != TrueStr)) {
+                t.Errorf("FAILED")
+        }
+        os.Unsetenv(DisableResourceHackEnvVar)
+}
