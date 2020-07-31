@@ -1,0 +1,5 @@
+packageName: atsgen-tf-operator
+defaultChannel: stable
+channels:
+  - name: stable
+    currentCSV: atsgen-tf-operator.v0.0.1

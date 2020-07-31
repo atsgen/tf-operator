@@ -1,5 +1,0 @@
-packageName: tf-operator
-defaultChannel: alpha
-channels:
-  - name: alpha
-    currentCSV: tf-operator.v0.0.1

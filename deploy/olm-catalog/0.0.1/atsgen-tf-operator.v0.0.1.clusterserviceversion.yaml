@@ -1,19 +1,34 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: tf-operator.v0.0.1
+  name: atsgen-tf-operator.v0.0.1
   namespace: placeholder
   annotations:
-    alm-examples: >-
-      [{"apiVersion":"tungsten.atsgen.com/v1alpha1","kind":"SDN","metadata":{"name":"default"},"spec":{"datapathConfig":{"useVrouter":true}}}]
+    alm-examples: |-
+      [
+         {
+            "apiVersion": "tungsten.atsgen.com/v1alpha1",
+            "kind": "SDN",
+            "metadata": {
+               "name": "default"
+            },
+            "spec": {
+               "datapathConfig": {
+                  "useVrouter": true
+               }
+            }
+         }]
     categories: Networking
     certified: 'false'
-    createdAt: ''
-    description: Operator for lifecycle management of Tungsten Fabric SDN
-    containerImage: ''
-    support: ''
+    createdAt: '2020-06-30T12:00:00Z'
+    description: >-
+      Atsgen Tungsten Fabric Operator for lifecycle management of Tungsten Fabric SDN
+    containerImage: 'registry.connect.redhat.com/atsgen/tf-operator:v0.0.1'
+    support: 'tungsten-vpp@atsgen.com'
     capabilities: Seamless Upgrades
-    repository: ''
+    repository: 'https://github.com/atsgen'
+    marketplace.openshift.io/remote-workflow: "https://atsgen.com/tungsten/openshift-installation/"
+    marketplace.openshift.io/action-text: "Install-time Instructions"
 spec:
   displayName: ATSgen Tungsten Fabric Operator
   description: >
@@ -59,7 +74,7 @@ spec:
     - name: support
       email: tungsten-vpp@atsgen.com
   provider:
-    name: ATSgen
+    name: Atsgen
   labels: {}
   selector:
     matchLabels: {}
