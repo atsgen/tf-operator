@@ -1,7 +1,7 @@
 apiVersion: operators.coreos.com/v1alpha1
 kind: ClusterServiceVersion
 metadata:
-  name: atsgen-tf-operator.v0.0.1
+  name: tf-operator.v0.0.1
   namespace: placeholder
   annotations:
     alm-examples: |-
@@ -30,7 +30,7 @@ metadata:
     marketplace.openshift.io/remote-workflow: "https://atsgen.com/tungsten/openshift-installation/"
     marketplace.openshift.io/action-text: "Install-time Instructions"
 spec:
-  displayName: ATSgen Tungsten Fabric Operator
+  displayName: Atsgen Tungsten Fabric Operator
   description: >
     ## About the managed application
 
@@ -55,7 +55,6 @@ spec:
     Tungsten Fabric Operators is intended to simplify the lifecycle management
     of Tungsten Fabric SDN
 
-    ## Prerequisites for enabling this Operator
   maturity: beta
   version: 0.0.1
   replaces: ''
