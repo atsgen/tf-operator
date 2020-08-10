@@ -51,6 +51,11 @@ spec:
             name: env
         - configMapRef:
             name: kube-manager-config
+{{- if eq .K8S_PROVIDER "OpenShift"}}
+        env:
+        - name: K8S_EXTENSION_DISABLED
+          value: "true"
+{{- end}}
         volumeMounts:
         - mountPath: /var/log/contrail
           name: kube-manager-logs
