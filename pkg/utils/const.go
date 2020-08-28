@@ -11,15 +11,25 @@ const (
 	// password
 	AdminPasswordEnvVar = "ADMIN_PASSWORD"
 
-	// KubernetesServiceHostEnvVar variable defines the env variable
+	// KubernetesServiceHostConfigEnvVar variable defines the env variable
 	// KUBERNETES_SERVICE_HOST, which is used to indicate k8s api server
+	// host address for operator
+	KubernetesServiceHostConfigEnvVar = "KUBERNETES_SERVICE_HOST"
+
+	// KubernetesServicePortConfigEnvVar variable defines the env variable
+	// KUBERNETES_SERVICE_PORT, which is used to indicate k8s api server
+	// port address for operator
+	KubernetesServicePortConfigEnvVar = "KUBERNETES_SERVICE_PORT"
+
+	// KubernetesServiceHostEnvVar variable defines the env variable
+	// TF_KUBERNETES_SERVICE_HOST, which is used to indicate k8s api server
 	// host address
-	KubernetesServiceHostEnvVar = "KUBERNETES_SERVICE_HOST"
+	KubernetesServiceHostEnvVar = "TF_KUBERNETES_SERVICE_HOST"
 
 	// KubernetesServicePortEnvVar variable defines the env variable
-	// KUBERNETES_SERVICE_PORT, which is used to indicate k8s api server
+	// TF_KUBERNETES_SERVICE_PORT, which is used to indicate k8s api server
 	// port address
-	KubernetesServicePortEnvVar = "KUBERNETES_SERVICE_PORT"
+	KubernetesServicePortEnvVar = "TF_KUBERNETES_SERVICE_PORT"
 
 	// OpenShiftMultusStatusEnvVar variable defines the env variable
 	// OPENSHIFT_MULTUS, which is used to indicate the whether multus

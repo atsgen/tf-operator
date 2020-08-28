@@ -243,5 +243,10 @@ func setKubernetesApiEnv(kubeconfigFile string) error {
 	// apiserver directly; gotta "pass" it via environment vars.
 	os.Setenv(utils.KubernetesServiceHostEnvVar, url.Hostname())
 	os.Setenv(utils.KubernetesServicePortEnvVar, url.Port())
+
+	// override api server config for operator itself as well
+	os.Setenv(utils.KubernetesServiceHostConfigEnvVar, url.Hostname())
+	os.Setenv(utils.KubernetesServicePortConfigEnvVar, url.Port())
+
 	return nil
 }
