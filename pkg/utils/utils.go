@@ -157,3 +157,14 @@ func IsResourceHackDisabled() string {
 	// it refers to disabling the resource limit hack
 	return TrueStr
 }
+
+// GetVrouterPhyiscalInterface returns physical interface to which vrouter
+// needs to bind, returns empty if nothing configured in which case vrouter
+// falls back to the interface with default route
+func GetVrouterPhyiscalInterface() string {
+	intf, found := os.LookupEnv(VrouterPhyiscalInterfaceEnvVar)
+	if !found {
+		return ""
+	}
+	return intf
+}

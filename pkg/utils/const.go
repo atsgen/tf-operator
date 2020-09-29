@@ -64,6 +64,11 @@ const (
 	// Hack/Work-arround for resource configuration
 	DisableResourceHackEnvVar = "DISABLE_RESOURCE_HACK"
 
+	// VrouterPhyiscalInterfaceEnvVar variable defines the env
+	// variable VROUTER_PHYSICAL_INTERFACE, which is used to indicate
+	// physical interface to which vrouter needs to bind
+	VrouterPhyiscalInterfaceEnvVar = "VROUTER_PHYSICAL_INTERFACE"
+
 	// OpenShiftProvider - Value for k8s provider as OpenShift
 	OpenShiftProvider = "OpenShift"
 

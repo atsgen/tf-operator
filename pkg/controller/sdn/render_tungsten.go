@@ -128,7 +128,7 @@ func solicitData(data *render.RenderData, cr *tungstenv1alpha1.SDN, nodes *NodeL
 	data.Data["TUNGSTEN_IMAGE_PULL_SECRET"] = ""
 	data.Data["LOG_LEVEL"] = "SYS_NOTICE"
 	data.Data["METADATA_PROXY_SECRET"] = "tungsten"
-	data.Data["PHYSICAL_INTERFACE"] = ""
+	data.Data["PHYSICAL_INTERFACE"] = utils.GetVrouterPhyiscalInterface()
 	data.Data["RABBITMQ_NODE_PORT"] = "5673"
 	data.Data["RABBITMQ_NODES"] = controllerNodes
 	data.Data["WEBUI_NODES"] = controllerNodes
