@@ -3,5 +3,7 @@ kind: SDN
 metadata:
   name: default
 spec:
+  adminSecretRef:
+    name: tungsten-auth
   datapathConfig:
     useVrouter: true

@@ -3,6 +3,8 @@ kind: SDN
 metadata:
   name: default
 spec:
+  adminSecretRef:
+    name: tungsten-auth
   cniConfig:
     clusterName: k8s
     ipFabricNetwork:
